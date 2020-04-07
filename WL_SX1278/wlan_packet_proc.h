@@ -2,7 +2,7 @@
 #define __WLAN_PACKET_PROC_H__
 #include <stddef.h>
 #include <stdint.h>
-#include <cstdio>
+#include <stdio.h>
 #include "crc32.h"
 
 enum PACK_STATE{

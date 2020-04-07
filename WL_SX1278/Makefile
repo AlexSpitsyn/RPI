@@ -1,23 +1,25 @@
-CC=g++
-CFLAGS=-march=armv6zk -mtune=arm1176jzf-s -mfpu=vfp -mfloat-abi=hard -Ofast -Wall -pthread -lbcm2835 -lwiringPi -lrt -lpigpio 
+#CC=gcc
+#CFLAGS=-march=armv6zk -mtune=arm1176jzf-s -mfpu=vfp -mfloat-abi=hard -Ofast -Wall -pthread -lbcm2835 -lwiringPi -lrt -lpigpio 
+
+CC=gcc
+CFLAGS=-lpigpio -lrt -pthread -lm
 
 all: read_wts_num
 
 read_wts_num: read_wts_num.o crc32.o wlan_packet_proc.o LoRa.o 
 	$(CC) $(CFLAGS) wlan_packet_proc.o read_wts_num.o crc32.o -o read_wts_num -lm
 
+crc32.o: crc32.c
+	$(CC) $(CFLAGS) -c crc32.c
 
-crc32.o: crc32.cpp
-	$(CC) $(CFLAGS) -c crc32.cpp
+read_wts_num.o: read_wts_num.c
+	$(CC) $(CFLAGS) -c read_wts_num.c
 
-read_wts_num.o: read_wts_num.cpp
-	$(CC) $(CFLAGS) -c read_wts_num.cpp
-
-wlan_packet_proc.o: wlan_packet_proc.cpp
-	$(CC) $(CFLAGS) -c wlan_packet_proc.cpp
+wlan_packet_proc.o: wlan_packet_proc.c
+	$(CC) $(CFLAGS) -c wlan_packet_proc.c
 
 LoRa.o: LoRa.c
-	gcc -c LoRa.c -o LoRa.o -lpigpio -lrt -pthread -lm
+	$(CC) $(CFLAGS) -c LoRa.c -o
 
 clean:
 	rm -rf *.o read_wts_num 

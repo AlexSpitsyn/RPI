@@ -1,10 +1,10 @@
 
-#include <cstdlib>
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <string>
-#include <unistd.h>
+//#include <cstdlib>
+//#include <iostream>
+//#include <fstream>
+//#include <sstream>
+#include <string.h>
+//#include <unistd.h>
 #include <stdlib.h>
 #include "crc32.h"
 #include <time.h>
@@ -12,7 +12,7 @@
 #include "LoRa.h"
 
 
-using namespace std;
+//using namespace std;
 
 #define PLOAD_WIDTH  20
 
@@ -71,7 +71,7 @@ int main(int argc, char** wts_num) {
 	WL_Packet rx_pack, tx_pack;
 	char txbuf[PLOAD_WIDTH];
     char rxbuf[PLOAD_WIDTH];	
-	WTS wts={TX3_ADDR,0,0};
+	WTS wts={TX_ADDR,0,0};
 	time_t send_time, send_timeout;
 	
 
@@ -110,7 +110,7 @@ int main(int argc, char** wts_num) {
     modem.eth.implicitHeader = 0;//Explicit header mode
     modem.eth.syncWord = 0x12;	
 	
-	memcpy(modem.tx.data.buf, sendData, PLOAD_WIDTH);
+	//memcpy(modem.tx.data.buf, tx_f, PLOAD_WIDTH);
 	LoRa_begin(&modem);
 	
 	//printf("\n\rTX PACKET:\n\r");
@@ -128,7 +128,7 @@ int main(int argc, char** wts_num) {
 						
 			if (data_recived) {				
 				
-				cout << "Data: [";
+				printf( "Data: [");
 				for (uint8_t i = 0; i < PLOAD_WIDTH; ++i) {
 					if (i == 0) {
 					  printf("%02X", rxbuf[i]);
@@ -136,7 +136,7 @@ int main(int argc, char** wts_num) {
 					  printf(", %02X", rxbuf[i]);
 					}
 				}   
-				cout << "]" << endl;
+				printf( "]");
 
 				convert_data_to_pack(rxbuf, &rx_pack);
 				printf("\n\rRX PACKET:\n\r");
@@ -199,10 +199,20 @@ int main(int argc, char** wts_num) {
 		}
 	}
     
+	FILE *fp;
+
+	fp = fopen("wts.csv");
+	if (fp == NULL){
+		printf("Error opening file!\n");
+		exit(1);
+	}
 	
+	fprintf(fp, "WTSN;STATE;VAL\r\n" );
+	fprintf(fp, "%d;%d;%d\r\n",wts.addr, wts.state, wts.val);	
+	fclose(fp);
  
-	std::ofstream out;          // поток для записи
-    out.open("wts.csv"); // окрываем файл для записи
+	//std::ofstream out;          // поток для записи
+/*     out.open("wts.csv"); // окрываем файл для записи
     if (out.is_open()){	
 		out << "WTSN;STATE;VAL" << std::endl;
 		out <<(int) wts.addr; 
@@ -211,6 +221,6 @@ int main(int argc, char** wts_num) {
 		out << wts.val << std::endl;		
     }
 	out.close();		
-	return 0;
+	return 0; */
 }
 
