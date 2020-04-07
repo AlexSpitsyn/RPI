@@ -68,22 +68,21 @@ int main(int argc, char** wts_num) {
 	LoRa_ctl modem;
 	
 	uint32_t CRC;	
-	WL_Packet rx_pack;
-	WL_Packet tx_pack;
+	WL_Packet rx_pack, tx_pack;
 	char txbuf[PLOAD_WIDTH];
     char rxbuf[PLOAD_WIDTH];	
 	WTS wts={TX3_ADDR,0,0};
 	time_t send_time, send_timeout;
 	
 
-	tx_pack.src_addr = WL_ADDR.val;
-	tx_pack.dest_addr = TX_ADDR.val;
+	tx_pack.src_addr = WL_ADDR.Val;
+	tx_pack.dest_addr = TX_ADDR.Val;
 	tx_pack.state = PS_NEW;
 	tx_pack.cmd = CMD_GET;
 	tx_pack.var = 0;
 	tx_pack.val = 1;
 	tx_pack.pack_ID = (uint16_t)clock();
-	convert_pack_to_data(sendData, &tx_pack);
+	convert_pack_to_data(txbuf, &tx_pack);
 	
 	
 	uint8_t send_cnt=0;
