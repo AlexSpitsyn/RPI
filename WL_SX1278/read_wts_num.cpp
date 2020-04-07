@@ -14,7 +14,7 @@
 
 using namespace std;
 
-#define PLOAD_WIDTH  20;
+#define PLOAD_WIDTH  20
 
 WL_ADDRESS WL_ADDR = { .S = "WTSH" };
 uint8_t data_recived=0;
@@ -50,7 +50,7 @@ int main(int argc, char** wts_num) {
 	}
 
 
-	uint8_t tmp;
+	int tmp;
 	sscanf(wts_num[argc-1], "%d", &tmp);
 	printf("WTS = %d\n\r", tmp);
 	if(tmp<0){
@@ -63,7 +63,7 @@ int main(int argc, char** wts_num) {
 	}
 	
 	WL_ADDRESS TX_ADDR = { .S = "WTS0" };
-	TX_ADDR.S[3]=tmp;
+	TX_ADDR.S[3]=(uint8_t)tmp;
 	
 	LoRa_ctl modem;
 	

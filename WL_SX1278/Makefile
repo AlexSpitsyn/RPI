@@ -16,8 +16,8 @@ read_wts_num.o: read_wts_num.cpp
 wlan_packet_proc.o: wlan_packet_proc.cpp
 	$(CC) $(CFLAGS) -c wlan_packet_proc.cpp
 
-nrf_config.o: LoRa.cpp
-	$(CC) $(CFLAGS) -c nrf_config.cpp
+LoRa.o: LoRa.c
+	gcc -c LoRa.c -o LoRa.o -lpigpio -lrt -pthread -lm
 
 clean:
 	rm -rf *.o read_wts_num 
