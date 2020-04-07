@@ -9,11 +9,12 @@
 #include "crc32.h"
 #include <time.h>
 #include "wlan_packet_proc.h"
+#include "LoRa.h"
 
 
 using namespace std;
 
-#define PLOAD_WIDTH = 20;
+#define PLOAD_WIDTH  20;
 
 WL_ADDRESS WL_ADDR = { .S = "WTSH" };
 uint8_t data_recived=0;

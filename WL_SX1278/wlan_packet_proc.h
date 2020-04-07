@@ -24,15 +24,42 @@ enum WTS_STATE{
   WTS_ERROR
 };
 
-typedef struct{
-  uint8_t state;
-  uint8_t host_addr;
-  uint8_t cmd;
-  uint8_t var;
-  uint16_t val;
-  uint16_t pack_ID;
-  uint32_t crc;
+enum CMD_STATE{
+	CMD_PRESENT,
+	CMD_GET,
+	CMD_SET,
+	CMD_EEPROM_WR,
+	CMD_ERR_CLR
+};
+
+
+typedef struct {//__attribute__((__packed__)){
+uint32_t src_addr;
+uint32_t dest_addr;
+
+uint8_t flags;	
+uint8_t state;
+uint8_t cmd;
+uint8_t var;
+	
+uint16_t val;	
+uint16_t pack_ID;
+	
+uint32_t crc;	
 }WL_Packet;
+
+typedef union {
+    
+			uint32_t Val;
+			char S[5];
+		
+}WL_ADDRESS;
+
+typedef struct{
+  uint8_t addr;
+  uint8_t state;
+  uint16_t val;
+}WTS;
 
 void print_packet(WL_Packet* pack);
 void convert_data_to_pack(uint8_t* data, WL_Packet* pack);
