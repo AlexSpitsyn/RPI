@@ -7,7 +7,7 @@ CFLAGS=-lpigpio -lrt -pthread -lm
 all: read_wts_num
 
 read_wts_num: read_wts_num.o crc32.o wlan_packet_proc.o LoRa.o 
-	$(CC) $(CFLAGS) wlan_packet_proc.o read_wts_num.o crc32.o -o read_wts_num -lm
+	$(CC) $(CFLAGS) wlan_packet_proc.o read_wts_num.o crc32.o -o read_wts_num 
 
 crc32.o: crc32.c
 	$(CC) $(CFLAGS) -c crc32.c
@@ -19,7 +19,7 @@ wlan_packet_proc.o: wlan_packet_proc.c
 	$(CC) $(CFLAGS) -c wlan_packet_proc.c
 
 LoRa.o: LoRa.c
-	$(CC) $(CFLAGS) -c LoRa.c -o
+	$(CC) $(CFLAGS) -c LoRa.c 
 
 clean:
 	rm -rf *.o read_wts_num 

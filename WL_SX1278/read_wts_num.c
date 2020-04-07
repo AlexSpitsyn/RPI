@@ -189,7 +189,7 @@ int main(int argc, char** wts_num) {
 					}								
 				}
 			}
-			delay(100);
+			sleep(1);
 			time(&send_timeout);
 		}
 		if(!data_recived){			
@@ -203,7 +203,7 @@ int main(int argc, char** wts_num) {
     
 	FILE *fp;
 
-	fp = fopen("wts.csv");
+	fp = fopen("wts.csv", "w");
 	if (fp == NULL){
 		printf("Error opening file!\n");
 		exit(1);
