@@ -63,6 +63,7 @@ int main(int argc, char** wts_num) {
 	}
 	
 	WL_ADDRESS TX_ADDR = { .S = "WTS0" };
+	WL_ADDRESS RX_ADDR = { .S = "WTS0" };
 	TX_ADDR.S[3]=(uint8_t)tmp;
 	
 	LoRa_ctl modem;
@@ -71,7 +72,7 @@ int main(int argc, char** wts_num) {
 	WL_Packet rx_pack, tx_pack;
 	char txbuf[PLOAD_WIDTH];
     char rxbuf[PLOAD_WIDTH];	
-	WTS wts={TX_ADDR,0,0};
+	WTS wts={TX_ADDR.Val,0,0};
 	time_t send_time, send_timeout;
 	
 
@@ -139,6 +140,7 @@ int main(int argc, char** wts_num) {
 				printf( "]");
 
 				convert_data_to_pack(rxbuf, &rx_pack);
+				RX_ADDR.Val=rx_pack.src_addr;
 				printf("\n\rRX PACKET:\n\r");
 				print_packet(&rx_pack);
 				CRC = Crc32(rxbuf,16);			
@@ -158,7 +160,7 @@ int main(int argc, char** wts_num) {
 							wts.state = WTS_OK;
 							wts.val = rx_pack.val;
 							printf("Pack state: OK\r\n");
-							printf("WTS%c Temp: %d'C\r\n", rx_pack.host_addr, wts.val);
+							printf("%S Temp: %d'C\r\n", RX_ADDR.S, wts.val);
 							break;
 						case PS_CRC_BAD:								
 							send_cnt++;
@@ -182,7 +184,7 @@ int main(int argc, char** wts_num) {
 							break;
 						default:
 							wts.state = 0;
-							printf("%s unknown error\n\r", WL_ADDR.S);
+							printf("%s unknown error\n\r", RX_ADDR.S);
 							break;
 					}								
 				}
