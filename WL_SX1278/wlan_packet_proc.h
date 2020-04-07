@@ -56,7 +56,7 @@ typedef union {
 }WL_ADDRESS;
 
 typedef struct{
-  uint8_t addr;
+  uint32_t addr;
   uint8_t state;
   uint16_t val;
 }WTS;
