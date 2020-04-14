@@ -451,37 +451,31 @@ void LoRa_print_state(LoRa_ctl *modem){
 	uint8_t dt_reg;
 		printf("SX1278 STATE:\r\n");
 	
-		dt_reg = SX1278_SPIReadReg(LR_RegIrqFlagsMask);
-		printf("RegIrqFlagsMask: 0x%02X\r\n", dt_reg);		
+		dt_reg = lora_reg_read_byte(modem->spid, REG_IRQ_FLAGS);
+		printf("REG_IRQ_FLAGS: 0x%02X\r\n", dt_reg);	
 	
-		dt_reg = SX1278_SPIReadReg(LR_RegIrqFlags);
-		printf("RegIrqFlags: 0x%02X\r\n", dt_reg);	
+		dt_reg = lora_reg_read_byte(modem->spid, REG_FR_MSB);
+		printf("REG_FR_MSB: 0x%02X\r\n", dt_reg);		
 	
-		dt_reg = SX1278_SPIReadReg(LR_RegFrMsb);
-		printf("RegFrMsb: 0x%02X\r\n", dt_reg);
-		
+		dt_reg = lora_reg_read_byte(modem->spid, REG_FR_MID);
+		printf("REG_FR_MID: 0x%02X\r\n", dt_reg);
 	
-		dt_reg = SX1278_SPIReadReg(LR_RegFrMid);
-		printf("RegFrMid: 0x%02X\r\n", dt_reg);
+		dt_reg = lora_reg_read_byte(modem->spid, REG_FR_LSB);
+		printf("REG_FR_LSB: 0x%02X\r\n", dt_reg);
 	
-		dt_reg = SX1278_SPIReadReg(LR_RegFrLsb);
-		printf("RegFrLsb: 0x%02X\r\n", dt_reg);
-	
-		dt_reg = SX1278_SPIReadReg(LR_RegOpMode);
-		printf("RegOpMode: 0x%02X\r\n", dt_reg);
+		dt_reg = lora_reg_read_byte(modem->spid, REG_OP_MODE);
+		printf("REG_OP_MODE: 0x%02X\r\n", dt_reg);
 		
-		dt_reg = SX1278_SPIReadReg(LR_RegFrMsb);
-		printf("RegFrMsb: 0x%02X\r\n", dt_reg);
+		dt_reg = lora_reg_read_byte(modem->spid, REG_PA_CONFIG);
+		printf("REG_PA_CONFIG: 0x%02X\r\n", dt_reg);
 		
-		dt_reg = SX1278_SPIReadReg(LR_RegPaConfig);
-		printf("RegPaConfig: 0x%02X\r\n", dt_reg);
+		dt_reg = lora_reg_read_byte(modem->spid, REG_MODEM_CONFIG_1);
+		printf("REG_MODEM_CONFIG_1: 0x%02X\r\n", dt_reg);
 		
-		dt_reg = SX1278_SPIReadReg(LR_RegModemConfig1);
-		printf("RegModemConfig1: 0x%02X\r\n", dt_reg);
-		
-		dt_reg = SX1278_SPIReadReg(LR_RegModemConfig2);
-		printf("RegModemConfig2: 0x%02X\r\n", dt_reg);		
-		
+		dt_reg = lora_reg_read_byte(modem->spid, REG_MODEM_CONFIG_2);
+		printf("REG_MODEM_CONFIG_2: 0x%02X\r\n", dt_reg);	
+
+
 		printf("SF: %d\r\n", modem->sf>>4);
 
 		printf("BW: %s\r\n", LoRaBandwidth_s[modem->bw>>4]);
@@ -490,6 +484,6 @@ void LoRa_print_state(LoRa_ctl *modem){
 		
 		printf("POWER: %d\r\n", modem->outPower);
 	
-    return lora_get_op_mode(modem->spid);
+   
 }
 
