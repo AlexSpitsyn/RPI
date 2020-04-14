@@ -118,7 +118,7 @@ int main(int argc, char** wts_num) {
 	print_packet(&tx_pack);
     
 	while(send_cnt<3){
-		
+		LoRa_send(&modem);
 		time(&send_time);
 		printf("\n\rSent to %s\n\rTry: %d\n\r", TX_ADDR.S,send_cnt+1);
 		printf("Start listening...\n\r");
