@@ -446,3 +446,50 @@ int lora_reg_write_bytes(int spid, unsigned char reg, char *buff, unsigned char 
 unsigned char LoRa_get_op_mode(LoRa_ctl *modem){
     return lora_get_op_mode(modem->spid);
 }
+
+void LoRa_print_state(LoRa_ctl *modem){
+	uint8_t dt_reg;
+		printf("SX1278 STATE:\r\n");
+	
+		dt_reg = SX1278_SPIReadReg(LR_RegIrqFlagsMask);
+		printf("RegIrqFlagsMask: 0x%02X\r\n", dt_reg);		
+	
+		dt_reg = SX1278_SPIReadReg(LR_RegIrqFlags);
+		printf("RegIrqFlags: 0x%02X\r\n", dt_reg);	
+	
+		dt_reg = SX1278_SPIReadReg(LR_RegFrMsb);
+		printf("RegFrMsb: 0x%02X\r\n", dt_reg);
+		
+	
+		dt_reg = SX1278_SPIReadReg(LR_RegFrMid);
+		printf("RegFrMid: 0x%02X\r\n", dt_reg);
+	
+		dt_reg = SX1278_SPIReadReg(LR_RegFrLsb);
+		printf("RegFrLsb: 0x%02X\r\n", dt_reg);
+	
+		dt_reg = SX1278_SPIReadReg(LR_RegOpMode);
+		printf("RegOpMode: 0x%02X\r\n", dt_reg);
+		
+		dt_reg = SX1278_SPIReadReg(LR_RegFrMsb);
+		printf("RegFrMsb: 0x%02X\r\n", dt_reg);
+		
+		dt_reg = SX1278_SPIReadReg(LR_RegPaConfig);
+		printf("RegPaConfig: 0x%02X\r\n", dt_reg);
+		
+		dt_reg = SX1278_SPIReadReg(LR_RegModemConfig1);
+		printf("RegModemConfig1: 0x%02X\r\n", dt_reg);
+		
+		dt_reg = SX1278_SPIReadReg(LR_RegModemConfig2);
+		printf("RegModemConfig2: 0x%02X\r\n", dt_reg);		
+		
+		printf("SF: %d\r\n", modem->sf>>4);
+
+		printf("BW: %s\r\n", LoRaBandwidth_s[modem->bw>>4]);
+		
+		printf("CR: 4/%d\r\n", 4+(modem->ecr>>1));
+		
+		printf("POWER: %d\r\n", modem->outPower);
+	
+    return lora_get_op_mode(modem->spid);
+}
+

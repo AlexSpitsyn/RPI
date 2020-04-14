@@ -70,6 +70,19 @@ typedef enum BandWidth{
     BW500 = 9<<4,
 } BandWidth;
 
+static const char *LoRaBandwidth_s[10] = { 
+		"7.8",
+		"10.4",
+		"15.6",
+		"20.8",
+		"31.2",
+		"41.7",
+		"62.5",
+		"125.0",
+		"250.0",
+		"500.0"
+		};
+		
 typedef enum SpreadingFactor{
     SF7 = 7<<4,
     SF8 = 8<<4,
@@ -245,3 +258,5 @@ void lora_set_lna(int spid, LnaGain lnaGain, _Bool lnaBoost);
 void lora_set_ocp(int spid, unsigned char OCP);
 void lora_set_implicit_header(int spid);
 void lora_set_explicit_header(int spid);
+void LoRa_print_state(LoRa_ctl *modem);
+

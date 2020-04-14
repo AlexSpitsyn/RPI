@@ -83,6 +83,7 @@ int main(int argc, char** wts_num) {
 	tx_pack.var = 0;
 	tx_pack.val = 1;
 	tx_pack.pack_ID = (uint16_t)clock();
+	tx_pack.crc= Crc32(tx_pack,16);	
 	convert_pack_to_data(txbuf, &tx_pack);
 	
 	
