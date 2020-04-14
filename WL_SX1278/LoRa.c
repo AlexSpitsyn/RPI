@@ -476,13 +476,13 @@ void LoRa_print_state(LoRa_ctl *modem){
 		printf("REG_MODEM_CONFIG_2: 0x%02X\r\n", dt_reg);	
 
 
-		printf("SF: %d\r\n", modem->sf>>4);
+		printf("SF: %d\r\n", modem->eth.sf>>4);
 
-		printf("BW: %s\r\n", LoRaBandwidth_s[modem->bw>>4]);
+		printf("BW: %s\r\n", LoRaBandwidth_s[modem->eth.bw>>4]);
 		
-		printf("CR: 4/%d\r\n", 4+(modem->ecr>>1));
+		printf("CR: 4/%d\r\n", 4+(modem->eth.ecr>>1));
 		
-		printf("POWER: %d\r\n", modem->outPower);
+		printf("POWER: %d\r\n", modem->eth.outPower);
 	
    
 }
