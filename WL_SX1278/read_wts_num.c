@@ -17,12 +17,12 @@
 #define PLOAD_WIDTH  20
 
 WL_ADDRESS WL_ADDR = { .S = "WTSH" };
-uint8_t data_recived=0;
+uint8_t data_received=0;
 
  void tx_f(txData *tx){
     LoRa_ctl *modem = (LoRa_ctl *)(tx->userPtr);
     printf("tx done;\t");
-    printf("sent string: \"%s\"\n\n", tx->buf);//Data we've sent
+    //printf("sent string: \"%s\"\n\n", tx->buf);//Data we've sent
     
     LoRa_receive(modem);
 }
@@ -30,13 +30,13 @@ uint8_t data_recived=0;
 void rx_f(rxData *rx){
     LoRa_ctl *modem = (LoRa_ctl *)(rx->userPtr);
     LoRa_stop_receive(modem);//manually stoping RxCont mode
-    printf("rx done;\t");
-    printf("CRC error: %d;\t", rx->CRC);
-    printf("Data size: %d;\t", rx->size);
-    printf("received string: \"%s\";\t", rx->buf);//Data we've received
-    printf("RSSI: %d;\t", rx->RSSI);
-    printf("SNR: %f\n", rx->SNR);
-    data_recived=1;
+    printf("rx done;\r\n");
+    printf("CRC error: %d;\r\n", rx->CRC);
+    printf("Data size: %d;\r\n", rx->size);
+    //printf("received string: \"%s\";\r\n", rx->buf);//Data we've received
+    printf("RSSI: %d;\\r\n", rx->RSSI);
+    printf("SNR: %f\r\n", rx->SNR);
+    data_received=1;
     LoRa_sleep(modem);
 } 
 
@@ -97,15 +97,15 @@ int main(int argc, char** wts_num) {
     modem.rx.data.userPtr = (void *)(&modem);//To handle with chip from rx callback
     modem.tx.data.userPtr = (void *)(&modem);//To handle with chip from tx callback   
     modem.tx.data.size = PLOAD_WIDTH;//Payload len
-    modem.eth.preambleLen=6;
-    modem.eth.bw = BW20_8;
+    modem.eth.preambleLen=12;
+    modem.eth.bw = BW125;
     modem.eth.sf = SF8;
     modem.eth.ecr = CR5;
     modem.eth.CRC = 1;//Turn on CRC checking
     modem.eth.freq = 434000000;
     modem.eth.resetGpioN = 25;//lora RESET pin
     modem.eth.dio0GpioN = 24;//lora DIO0 pin to control Rxdone and Txdone interrupts
-    modem.eth.outPower = OP20;//Output power
+    modem.eth.outPower = OP7;//Output power
     modem.eth.powerOutPin = PA_BOOST;//Power Amplifire pin
     modem.eth.AGC = 1;//Auto Gain Control
     modem.eth.OCP = 240;// 45 to 240 mA. 0 to turn off protection
@@ -114,21 +114,21 @@ int main(int argc, char** wts_num) {
 	
 	//memcpy(modem.tx.data.buf, tx_f, PLOAD_WIDTH);
 	LoRa_begin(&modem);
-	
+	LoRa_print_state(&modem);	
 	//printf("\n\rTX PACKET:\n\r");
 	print_packet(&tx_pack);
-    
+
 	while(send_cnt<3){
 		LoRa_send(&modem);
 		time(&send_time);
 		printf("\n\rSent to %s\n\rTry: %d\n\r", TX_ADDR.S,send_cnt+1);
 		printf("Start listening...\n\r");
 				
-		data_recived=0;
+		data_received=0;
 		  
 		while(difftime(send_timeout,send_time)<5 ){
 						
-			if (data_recived) {				
+			if (data_received) {				
 				
 				printf( "Data: [");
 				for (uint8_t i = 0; i < PLOAD_WIDTH; ++i) {
@@ -189,16 +189,20 @@ int main(int argc, char** wts_num) {
 							break;
 					}								
 				}
+			
+			break;
 			}
 			sleep(1);
 			time(&send_timeout);
 		}
-		if(!data_recived){			
+		if(!data_received){			
 			wts.state = WTS_NA;
 			printf ("Data NOT Recieved %d\n\r", send_cnt );
 			send_cnt++;
 		}else{
-			break;
+			data_received = 0;
+			send_cnt=3;	
+			//break;
 		}
 	}
     
