@@ -36,13 +36,11 @@ enum CMD_STATE{
 typedef struct {//__attribute__((__packed__)){
 uint32_t src_addr;
 uint32_t dest_addr;
-
 uint8_t flags;	
 uint8_t state;
 uint8_t cmd;
-uint8_t var;
-	
-uint16_t val;	
+uint8_t var;	
+int16_t val;	
 uint16_t pack_ID;
 	
 uint32_t crc;	
