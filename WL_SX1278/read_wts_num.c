@@ -21,7 +21,7 @@ uint8_t data_received=0;
 
  void tx_f(txData *tx){
     LoRa_ctl *modem = (LoRa_ctl *)(tx->userPtr);
-    printf("tx done;\t");
+    printf("tx done;\r\n");
     //printf("sent string: \"%s\"\n\n", tx->buf);//Data we've sent
     
     LoRa_receive(modem);
@@ -34,7 +34,7 @@ void rx_f(rxData *rx){
     printf("CRC error: %d;\r\n", rx->CRC);
     printf("Data size: %d;\r\n", rx->size);
     //printf("received string: \"%s\";\r\n", rx->buf);//Data we've received
-    printf("RSSI: %d;\\r\n", rx->RSSI);
+    printf("RSSI: %d;\r\n", rx->RSSI);
     printf("SNR: %f\r\n", rx->SNR);
     data_received=1;
     LoRa_sleep(modem);
@@ -42,29 +42,29 @@ void rx_f(rxData *rx){
 
 
 
-int main(int argc, char** wts_num) {
+int main(int argc, char** argv) {
 
 	if(argc<2){
-		printf("WTS not specified\n\r");
+		printf("WTS not specified\r\n");
 		return 1;
 	}
 
 
-	int tmp;
-	sscanf(wts_num[argc-1], "%d", &tmp);
-	printf("WTS = %d\n\r", tmp);
-	if(tmp<0){
+	int wts_num;
+	sscanf(argv[argc-1], "%d", &wts_num);
+	printf("WTS = %d\n\r", wts_num);
+	if(wts_num<0){
 		printf("Wrong WTS num\r\n");
 		return 2;
 	}
-	if(tmp>16){
+	if(wts_num>16){
 		printf("WTS num must be < 16\n\r");
 		return 3;
 	}
 	
 	WL_ADDRESS TX_ADDR = { .S = "WTS0" };
 	WL_ADDRESS RX_ADDR = { .S = "WTS0" };
-	TX_ADDR.S[3]=(uint8_t)tmp;
+	TX_ADDR.S[3]=(uint8_t)wts_num;
 	
 	LoRa_ctl modem;
 	
@@ -121,7 +121,7 @@ int main(int argc, char** wts_num) {
 	while(send_cnt<3){
 		LoRa_send(&modem);
 		time(&send_time);
-		printf("\n\rSent to %s\n\rTry: %d\n\r", TX_ADDR.S,send_cnt+1);
+		printf("\n\rSent to WTS-%d\n\rTry: %d\n\r", wts_num,send_cnt+1);
 		printf("Start listening...\n\r");
 				
 		data_received=0;
@@ -161,7 +161,7 @@ int main(int argc, char** wts_num) {
 							wts.state = WTS_OK;
 							wts.val = rx_pack.val;
 							printf("Pack state: OK\r\n");
-							printf("%S Temp: %d'C\r\n", RX_ADDR.S, wts.val);
+							printf("WTS-%d Temp: %d'C\r\n", wts_num, wts.val);
 							break;
 						case PS_CRC_BAD:								
 							send_cnt++;
@@ -200,34 +200,22 @@ int main(int argc, char** wts_num) {
 			printf ("Data NOT Recieved %d\n\r", send_cnt );
 			send_cnt++;
 		}else{
-			data_received = 0;
-			send_cnt=3;	
-			//break;
-		}
-	}
-    
-	FILE *fp;
-
-	fp = fopen("wts.csv", "w");
-	if (fp == NULL){
-		printf("Error opening file!\n");
-		exit(1);
-	}
+			FILE *fp;
+			
+			fp = fopen("wts.csv", "w");
+			if (fp == NULL){
+				printf("Error opening file!\n");
+				exit(1);
+			}
 	
-	fprintf(fp, "WTSN;STATE;VAL\r\n" );
-	fprintf(fp, "%d;%d;%d\r\n",wts.addr, wts.state, wts.val);	
-	fclose(fp);
- 
-	//std::ofstream out;          // поток для записи
-/*     out.open("wts.csv"); // окрываем файл для записи
-    if (out.is_open()){	
-		out << "WTSN;STATE;VAL" << std::endl;
-		out <<(int) wts.addr; 
-		out <<";";
-		out << (int)wts.state <<";";
-		out << wts.val << std::endl;		
-    }
-	out.close();		
-	return 0; */
+			fprintf(fp, "WTSN;STATE;VAL\r\n" );
+			fprintf(fp, "%d;%d;%d\r\n",wts_num, wts.state, wts.val);	
+			fclose(fp);
+			return 0;
+					
+		}
+	}    
+	
+	return 1; 
 }
 
