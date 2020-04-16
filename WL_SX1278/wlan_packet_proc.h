@@ -56,7 +56,7 @@ typedef union {
 typedef struct{
   uint32_t addr;
   uint8_t state;
-  uint16_t val;
+  int16_t val;
 }WTS;
 
 void print_packet(WL_Packet* pack);
