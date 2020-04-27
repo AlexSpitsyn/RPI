@@ -75,6 +75,11 @@ int main(int argc, char** argv) {
 	WTS wts={TX_ADDR.Val,0,0};
 	time_t send_time, send_timeout;
 	
+	time_t rawtime;
+	struct tm * timeinfo;
+	time ( &rawtime );
+	timeinfo = localtime ( &rawtime );
+	
 
 	tx_pack.src_addr = WL_ADDR.Val;
 	tx_pack.dest_addr = TX_ADDR.Val;
@@ -201,17 +206,33 @@ int main(int argc, char** argv) {
 			send_cnt++;
 		}else{
 			FILE *fp;
-			
-			fp = fopen("wts.csv", "w");
+			//data
+			fp = fopen("wts_data.txt", "w");
 			if (fp == NULL){
 				printf("Error opening file!\n");
 				exit(1);
-			}
+				return 1;
+			}else{
 	
-			fprintf(fp, "WTSN;STATE;VAL\r\n" );
-			fprintf(fp, "%d;%d;%d\r\n",wts_num, wts.state, wts.val);	
+			//fprintf(fp, "WTSN;STATE;VAL\r\n" );
+			fprintf(fp, "%d;%d;%d",wts_num, wts.val, wts.state);	
 			fclose(fp);
+			}
+			
+			
+			//LOG
+			fp = fopen("wts_log.txt", "at");
+			if (fp == NULL){
+				printf("Error opening file!\n");
+				exit(1);
+				return 1;
+			}	
+			//fprintf(fp, "WTSN;STATE;VAL\r\n" );
+			fprintf(fp, "WTS%d %d %d %s", wts_num, wts.val, wts.state, asctime (timeinfo));	
+			fclose(fp);			
 			return 0;
+			
+			//test
 					
 		}
 	}    
