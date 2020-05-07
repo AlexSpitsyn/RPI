@@ -16,7 +16,7 @@
 
 #define PLOAD_WIDTH  20
 
-WL_ADDRESS WL_ADDR = { .S = "WTSH" };
+WL_ADDRESS WL_ADDR = { .S = "HOST" };
 uint8_t data_received=0;
 
  void tx_f(txData *tx){
@@ -43,28 +43,47 @@ void rx_f(rxData *rx){
 
 
 int main(int argc, char** argv) {
+	//addr cmd var val
 
+	uint32_t tx_addr=0;
+	uint8_t tx_cmd=0;
+	uint8_t tx_var=0;
+	uint16_t tx_val=0;
+	//ADDR
 	if(argc<2){
-		printf("WTS not specified\r\n");
+		printf("ERROR: addr not specified\r\n");
 		return 1;
+	}else{
+		sscanf(argv[1], "%d", &tx_addr);
+		printf("TX_ADDR = %d\n\r", tx_addr);
+	}
+	//CMD
+	if(argc<3){
+		printf("ERROR: cmd not specified\r\n");
+		return 1;
+	}else{
+		sscanf(argv[2], "%d", &tx_cmd);
+		printf("TX_CMD = %d\n\r", tx_cmd);
+	}
+	//VAR
+	if(argc<4){
+		printf("WARNING: var not specified. Default 0\r\n");	
+	}else{
+		sscanf(argv[3], "%d", &tx_var);
+		printf("TX_VAR = %d\n\r", tx_var);	
+	}
+	//VAL
+	if(argc<5){
+		printf("WARNING: val not specified. Default 0\r\n");		
+	}else{
+		sscanf(argv[4], "%d", &tx_val);
+		printf("TX_VAL = %d\n\r", tx_val);	
 	}
 
-
-	int wts_num;
-	sscanf(argv[argc-1], "%d", &wts_num);
-	printf("WTS = %d\n\r", wts_num);
-	if(wts_num<0){
-		printf("Wrong WTS num\r\n");
-		return 2;
-	}
-	if(wts_num>16){
-		printf("WTS num must be < 16\n\r");
-		return 3;
-	}
 	
-	WL_ADDRESS TX_ADDR = { .S = "WTS0" };
-	WL_ADDRESS RX_ADDR = { .S = "WTS0" };
-	TX_ADDR.S[3]=(uint8_t)wts_num;
+	WL_ADDRESS TX_ADDR = { .Val = tx_addr };
+	WL_ADDRESS RX_ADDR = { .Val = 0 };
+	
 	
 	LoRa_ctl modem;
 	
@@ -72,7 +91,7 @@ int main(int argc, char** argv) {
 	WL_Packet rx_pack, tx_pack;
 	char txbuf[PLOAD_WIDTH];
     char rxbuf[PLOAD_WIDTH];	
-	WTS wts={TX_ADDR.Val,0,0};
+	WTS wts={TX_ADDR.Val,0,0};//!!!!!!!!!
 	time_t send_time, send_timeout;
 	
 	time_t rawtime;
@@ -84,9 +103,9 @@ int main(int argc, char** argv) {
 	tx_pack.src_addr = WL_ADDR.Val;
 	tx_pack.dest_addr = TX_ADDR.Val;
 	tx_pack.state = PS_NEW;
-	tx_pack.cmd = CMD_GET;
-	tx_pack.var = 0;
-	tx_pack.val = 1;
+	tx_pack.cmd = tx_cmd;
+	tx_pack.var = tx_var;
+	tx_pack.val = tx_val;
 	tx_pack.pack_ID = (uint16_t)clock();
 	tx_pack.crc= Crc32(&tx_pack,16);	
 	convert_pack_to_data(txbuf, &tx_pack);
@@ -126,7 +145,7 @@ int main(int argc, char** argv) {
 	while(send_cnt<3){
 		LoRa_send(&modem);
 		time(&send_time);
-		printf("\n\rSent to WTS-%d\n\rTry: %d\n\r", wts_num,send_cnt+1);
+		printf("\n\rSent to %08X\n\rTry: %d\n\r", WL_ADDR.Val,send_cnt+1);
 		printf("Start listening...\n\r");
 				
 		data_received=0;
@@ -154,89 +173,67 @@ int main(int argc, char** argv) {
 				if(CRC!=rx_pack.crc){		
 					printf("CRC: BAD\n\r");				
 					if(send_cnt==3){
-						wts.state = WL_CRC_BAD;
+						return = WL_CRC_BAD;
 					}
 					send_cnt++;
 					//delay(3000);
 							
 				}else{
-					printf("CRC: OK\r\n" );		
-					switch(rx_pack.state){
-						case PS_OK:
-							wts.state = WL_OK;
-							wts.val = rx_pack.val;
-							printf("Pack state: OK\r\n");
-							printf("WTS-%d Temp: %d'C\r\n", wts_num, wts.val);
-							break;
-						case PS_CRC_BAD:								
-							send_cnt++;
-							//delay(3000);
-							break;
-						case PS_CMD_NOT_SUPPORTED:
-							wts.state = WL_CMD_NOT_SUPPORTED;							
-							printf("Pack state: CMD NOT SUPPORTED\n\r");														
-							break;
-						case PS_VAR_NOT_SUPPORTED:
-							wts.state = WL_VAR_NOT_SUPPORTED;							
-							printf("Pack state: VAR NOT SUPPORTED\n\r");													 
-							break;
-						case PS_VAL_NOT_SUPPORTED:
-							wts.state = WL_VAL_NOT_SUPPORTED;							
-							printf("Pack state: VAL NOT SUPPORTED\n\r" );
-							break;
-						case PS_ERROR:
-							wts.state = WL_ERROR;
-							printf("Pack state: ERROR\n\r");
-							break;
-						default:
-							wts.state = 0;
-							printf("%s unknown error\n\r", RX_ADDR.S);
-							break;
-					}								
-				}
-			
-			break;
+					RX_ADDR.Val=rx_pack.src_addr;
+					if(RX_ADDR.Val!=TX_ADDR.Val){		
+						printf("WRONG ADDR\n\r");				
+						if(send_cnt==3){
+							return = WL_ADDRESS_FAIL;
+					}
+					send_cnt++;
+					//delay(3000);
+							
+					}else{
+					
+						printf("CRC: OK\r\n" );
+						printf("ADDR PASS\n\r");	
+						printf("Pack state: %d\r\n", rx_pack.state);
+						
+						FILE *fp;
+						//data
+						fp = fopen("retpack.txt", "w");
+						if (fp == NULL){
+							printf("Error opening file!\n");
+							exit(1);
+							return WL_ERROR;
+						}else{
+				
+							fprintf(fp, "ADDR;STATE;CMD;VAR;VAL\r\n" );
+							fprintf(fp, "%d;%d;%d,%d,%d",rx_pack.src_addr, rx_pack.state, rx_pack.cmd, rx_pack.var, rx_pack.val);	
+							fclose(fp);
+						}
+						
+						
+						//LOG
+						fp = fopen("wl_log.txt", "at");
+						if (fp == NULL){
+							printf("Error opening file!\n");
+							exit(1);
+							return WL_ERROR;
+						}	
+						//fprintf(fp, "WTSN;STATE;VAL\r\n" );
+						fprintf(fp, "%d;%d;%d,%d,%d",rx_pack.src_addr, rx_pack.state, rx_pack.cmd, rx_pack.var, rx_pack.val);	
+						fprintf(fp, "%d %d %d %d %d %s", rx_pack.src_addr, rx_pack.state, rx_pack.cmd, rx_pack.var, rx_pack.val, asctime (timeinfo));	
+						fclose(fp);			
+						return rx_pack.state;
+					}
+					
+				}	
 			}
 			sleep(1);
 			time(&send_timeout);
-		}
-		if(!data_received){			
-			wts.state = WTS_OFFLINE;
-			printf ("Data NOT Recieved %d\n\r", send_cnt );
-			send_cnt++;
-		}else{
-			FILE *fp;
-			//data
-			fp = fopen("wts_data.txt", "w");
-			if (fp == NULL){
-				printf("Error opening file!\n");
-				exit(1);
-				return 1;
-			}else{
-	
-			//fprintf(fp, "WTSN;STATE;VAL\r\n" );
-			fprintf(fp, "%d;%d;%d",wts_num, wts.val, wts.state);	
-			fclose(fp);
-			}
-			
-			
-			//LOG
-			fp = fopen("wts_log.txt", "at");
-			if (fp == NULL){
-				printf("Error opening file!\n");
-				exit(1);
-				return 1;
-			}	
-			//fprintf(fp, "WTSN;STATE;VAL\r\n" );
-			fprintf(fp, "WTS%d %d %d %s", wts_num, wts.val, wts.state, asctime (timeinfo));	
-			fclose(fp);			
-			return 0;
-			
-			//test
-					
-		}
+		}				
+		
+		printf ("Data NOT Recieved %d\n\r", send_cnt );
+		send_cnt++;
+		
 	}    
 	
-	return 1; 
+	return WL_OFFLINE; 
 }
 
