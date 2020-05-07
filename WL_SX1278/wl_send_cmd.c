@@ -81,7 +81,7 @@ int main(int argc, char** argv) {
 	}
 
 	
-	WL_ADDRESS TX_ADDR = { .Val = tx_addr };
+	
 	WL_ADDRESS RX_ADDR = { .Val = 0 };
 	
 	
@@ -91,7 +91,7 @@ int main(int argc, char** argv) {
 	WL_Packet rx_pack, tx_pack;
 	char txbuf[PLOAD_WIDTH];
     char rxbuf[PLOAD_WIDTH];	
-	WTS wts={TX_ADDR.Val,0,0};//!!!!!!!!!
+	
 	time_t send_time, send_timeout;
 	
 	time_t rawtime;
@@ -101,7 +101,7 @@ int main(int argc, char** argv) {
 	
 
 	tx_pack.src_addr = WL_ADDR.Val;
-	tx_pack.dest_addr = TX_ADDR.Val;
+	tx_pack.dest_addr = tx_addr;
 	tx_pack.state = PS_NEW;
 	tx_pack.cmd = tx_cmd;
 	tx_pack.var = tx_var;
@@ -164,8 +164,7 @@ int main(int argc, char** argv) {
 				}   
 				printf( "]");
 
-				convert_data_to_pack(rxbuf, &rx_pack);
-				RX_ADDR.Val=rx_pack.src_addr;
+				convert_data_to_pack(rxbuf, &rx_pack);				
 				printf("\n\rRX PACKET:\n\r");
 				print_packet(&rx_pack);
 				CRC = Crc32(rxbuf,16);			
@@ -180,7 +179,7 @@ int main(int argc, char** argv) {
 							
 				}else{
 					RX_ADDR.Val=rx_pack.src_addr;
-					if(RX_ADDR.Val!=TX_ADDR.Val){		
+					if(rx_pack.src_addr!=tx_addr){		
 						printf("WRONG ADDR\n\r");				
 						if(send_cnt==3){
 							return WL_ADDRESS_FAIL;
