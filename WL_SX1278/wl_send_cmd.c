@@ -173,7 +173,7 @@ int main(int argc, char** argv) {
 				if(CRC!=rx_pack.crc){		
 					printf("CRC: BAD\n\r");				
 					if(send_cnt==3){
-						return = WL_CRC_BAD;
+						return WL_CRC_BAD;
 					}
 					send_cnt++;
 					//delay(3000);
@@ -183,7 +183,7 @@ int main(int argc, char** argv) {
 					if(RX_ADDR.Val!=TX_ADDR.Val){		
 						printf("WRONG ADDR\n\r");				
 						if(send_cnt==3){
-							return = WL_ADDRESS_FAIL;
+							return WL_ADDRESS_FAIL;
 					}
 					send_cnt++;
 					//delay(3000);
