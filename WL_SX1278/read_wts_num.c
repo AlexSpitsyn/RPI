@@ -201,7 +201,7 @@ int main(int argc, char** argv) {
 			time(&send_timeout);
 		}
 		if(!data_received){			
-			wts.state = WTS_OFFLINE;
+			wts.state = WL_OFFLINE;
 			printf ("Data NOT Recieved %d\n\r", send_cnt );
 			send_cnt++;
 		}else{
