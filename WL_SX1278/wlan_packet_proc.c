@@ -13,8 +13,8 @@ void print_packet(WL_Packet* pack){
 
 void convert_data_to_pack(uint8_t* data, WL_Packet* pack){
 	
-	pack->crc = (uint32_t)(data[3]<<24) | (uint32_t)(data[2]<<16) | (uint32_t)(data[1]<<8) | (uint32_t)data[0];
-	pack->crc = (uint32_t)(data[7]<<24) | (uint32_t)(data[6]<<16) | (uint32_t)(data[5]<<8) | (uint32_t)data[4];
+	pack->src_addr = (uint32_t)(data[3]<<24) | (uint32_t)(data[2]<<16) | (uint32_t)(data[1]<<8) | (uint32_t)data[0];
+	pack->dest_addr = (uint32_t)(data[7]<<24) | (uint32_t)(data[6]<<16) | (uint32_t)(data[5]<<8) | (uint32_t)data[4];
 	pack->flags = data[8];
 	pack->state = data[9];
 	pack->cmd = data[10];

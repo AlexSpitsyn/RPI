@@ -240,7 +240,7 @@ int main(int argc, char** argv) {
 			time(&send_timeout);
 		}				
 		
-		printf ("Data NOT Recieved\n\r");
+		printf ("====Data NOT Recieved====\n\r");
 		send_cnt++;
 		
 	}    
