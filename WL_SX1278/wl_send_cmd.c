@@ -54,8 +54,11 @@ int main(int argc, char** argv) {
 		printf("ERROR: addr not specified\r\n");
 		return 1;
 	}else{
-		sscanf(argv[1], "%d", &tx_addr);
-		printf("TX_ADDR = %d\n\r", tx_addr);
+		if(sscanf(argv[1], "%d", &tx_addr)!=1){
+			fprintf(stderr, "Bad number: %s", argv[1]);
+		}else{
+			printf("TX_ADDR = %d\n\r", tx_addr);
+		}
 	}
 	//CMD
 	if(argc<3){
@@ -224,7 +227,7 @@ int main(int argc, char** argv) {
 			time(&send_timeout);
 		}				
 		
-		printf ("Data NOT Recieved %d\n\r", send_cnt );
+		printf ("Data NOT Recieved\n\r");
 		send_cnt++;
 		
 	}    
