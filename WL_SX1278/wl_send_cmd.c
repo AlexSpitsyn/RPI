@@ -81,10 +81,6 @@ int main(int argc, char** argv) {
 	}
 
 	
-	
-	WL_ADDRESS RX_ADDR = { .Val = 0 };
-	
-	
 	LoRa_ctl modem;
 	
 	uint32_t CRC;	
@@ -138,14 +134,14 @@ int main(int argc, char** argv) {
 	
 	//memcpy(modem.tx.data.buf, tx_f, PLOAD_WIDTH);
 	LoRa_begin(&modem);
-	LoRa_print_state(&modem);	
-	//printf("\n\rTX PACKET:\n\r");
+	//LoRa_print_state(&modem);	
+	printf("\n\rTX PACKET:\n\r");
 	print_packet(&tx_pack);
 
 	while(send_cnt<3){
 		LoRa_send(&modem);
 		time(&send_time);
-		printf("\n\rSent to %08X\n\rTry: %d\n\r", WL_ADDR.Val,send_cnt+1);
+		printf("\n\rSent to %08X\n\rTry: %d\n\r", tx_addr, send_cnt+1);
 		printf("Start listening...\n\r");
 				
 		data_received=0;
@@ -178,7 +174,7 @@ int main(int argc, char** argv) {
 					//delay(3000);
 							
 				}else{
-					RX_ADDR.Val=rx_pack.src_addr;
+					
 					if(rx_pack.src_addr!=tx_addr){		
 						printf("WRONG ADDR\n\r");				
 						if(send_cnt==3){
