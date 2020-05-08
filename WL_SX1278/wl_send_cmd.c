@@ -228,7 +228,7 @@ int main(int argc, char** argv) {
 							return WL_ERROR;
 						}	
 						//fprintf(fp, "WTSN;STATE;VAL\r\n" );
-						fprintf(fp, "%d;%d;%d,%d,%d",rx_pack.src_addr, rx_pack.state, rx_pack.cmd, rx_pack.var, rx_pack.val);	
+							
 						fprintf(fp, "%d %d %d %d %d %s", rx_pack.src_addr, rx_pack.state, rx_pack.cmd, rx_pack.var, rx_pack.val, asctime (timeinfo));	
 						fclose(fp);			
 						return rx_pack.state;
