@@ -45,10 +45,10 @@ void rx_f(rxData *rx){
 int main(int argc, char** argv) {
 	//addr cmd var val
 
-	uint32_t tx_addr=0;
-	uint8_t tx_cmd=0;
-	uint8_t tx_var=0;
-	uint16_t tx_val=0;
+	int tx_addr=0;
+	int tx_cmd=0;
+	int tx_var=0;
+	int tx_val=0;
 	//ADDR
 	if(argc<2){
 		printf("ERROR: addr not specified\r\n");
@@ -65,22 +65,31 @@ int main(int argc, char** argv) {
 		printf("ERROR: cmd not specified\r\n");
 		return 1;
 	}else{
-		sscanf(argv[2], "%d", &tx_cmd);
-		printf("TX_CMD = %d\n\r", tx_cmd);
+		if(sscanf(argv[2], "%d", &tx_cmd)!=1){
+			fprintf(stderr, "Bad number: %s", argv[2]);
+		}else{
+			printf("TX_CMD = %d\n\r", tx_cmd);
+		}
 	}
 	//VAR
 	if(argc<4){
 		printf("WARNING: var not specified. Default 0\r\n");	
 	}else{
-		sscanf(argv[3], "%d", &tx_var);
-		printf("TX_VAR = %d\n\r", tx_var);	
+		if(sscanf(argv[3], "%d", &tx_var)!=1){
+			fprintf(stderr, "Bad number: %s", argv[3]);
+		}else{
+			printf("TX_VAR = %d\n\r", tx_var);
+		}	
 	}
 	//VAL
 	if(argc<5){
 		printf("WARNING: val not specified. Default 0\r\n");		
 	}else{
-		sscanf(argv[4], "%d", &tx_val);
-		printf("TX_VAL = %d\n\r", tx_val);	
+		if(sscanf(argv[4], "%d", &tx_val)!=1){
+			fprintf(stderr, "Bad number: %s", argv[4]);
+		}else{
+			printf("TX_VAL = %d\n\r", tx_val);
+		}	
 	}
 
 	
@@ -100,11 +109,11 @@ int main(int argc, char** argv) {
 	
 
 	tx_pack.src_addr = WL_ADDR.Val;
-	tx_pack.dest_addr = tx_addr;
+	tx_pack.dest_addr = (uint32_t)tx_addr;
 	tx_pack.state = PS_NEW;
-	tx_pack.cmd = tx_cmd;
-	tx_pack.var = tx_var;
-	tx_pack.val = tx_val;
+	tx_pack.cmd = (uint8_t)tx_cmd;
+	tx_pack.var = (uint8_t)tx_var;
+	tx_pack.val = (uint16_t)tx_val;
 	tx_pack.pack_ID = (uint16_t)clock();
 	tx_pack.crc= Crc32(&tx_pack,16);	
 	convert_pack_to_data(txbuf, &tx_pack);
