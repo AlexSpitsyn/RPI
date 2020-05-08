@@ -55,7 +55,8 @@ int main(int argc, char** argv) {
 		return 1;
 	}else{
 		if(sscanf(argv[1], "%d", &tx_addr)!=1){
-			fprintf(stderr, "Bad number: %s", argv[1]);
+			fprintf(stderr, "Bad number: %s\r\n", argv[1]);
+			return 1;
 		}else{
 			printf("TX_ADDR = %d\n\r", tx_addr);
 		}
@@ -66,7 +67,8 @@ int main(int argc, char** argv) {
 		return 1;
 	}else{
 		if(sscanf(argv[2], "%d", &tx_cmd)!=1){
-			fprintf(stderr, "Bad number: %s", argv[2]);
+			fprintf(stderr, "Bad number: %s\r\n", argv[2]);
+			return 1;
 		}else{
 			printf("TX_CMD = %d\n\r", tx_cmd);
 		}
@@ -76,7 +78,8 @@ int main(int argc, char** argv) {
 		printf("WARNING: var not specified. Default 0\r\n");	
 	}else{
 		if(sscanf(argv[3], "%d", &tx_var)!=1){
-			fprintf(stderr, "Bad number: %s", argv[3]);
+			fprintf(stderr, "Bad number: %s\r\n", argv[3]);
+			return 1;
 		}else{
 			printf("TX_VAR = %d\n\r", tx_var);
 		}	
@@ -86,7 +89,8 @@ int main(int argc, char** argv) {
 		printf("WARNING: val not specified. Default 0\r\n");		
 	}else{
 		if(sscanf(argv[4], "%d", &tx_val)!=1){
-			fprintf(stderr, "Bad number: %s", argv[4]);
+			fprintf(stderr, "Bad number: %s\r\n", argv[4]);
+			return 1;
 		}else{
 			printf("TX_VAL = %d\n\r", tx_val);
 		}	
@@ -187,7 +191,7 @@ int main(int argc, char** argv) {
 							
 				}else{
 					
-					if(rx_pack.src_addr!=tx_addr){		
+					if(rx_pack.src_addr!=tx_pack.dest_addr | rx_pack.dest_addr!=WL_ADDR.Val){		
 						printf("WRONG ADDR\n\r");				
 						if(send_cnt==3){
 							return WL_ADDRESS_FAIL;
