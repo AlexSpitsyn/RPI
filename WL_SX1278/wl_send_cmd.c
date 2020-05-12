@@ -214,7 +214,7 @@ int main(int argc, char** argv) {
 							return WL_ERROR;
 						}else{
 				
-							fprintf(fp, "ADDR;STATE;CMD;VAR;VAL\r\n" );
+							//fprintf(fp, "ADDR;STATE;CMD;VAR;VAL\r\n" );
 							fprintf(fp, "%d;%d;%d,%d,%d",rx_pack.src_addr, rx_pack.state, rx_pack.cmd, rx_pack.var, rx_pack.val);	
 							fclose(fp);
 						}
