@@ -5,6 +5,8 @@
 #include <stdio.h>
 #include "crc32.h"
 
+#define PACKET_SIZE		36
+
 enum PACK_STATE{
   PS_NEW,
   PS_OK,
@@ -38,14 +40,15 @@ enum CMD_STATE{
 typedef struct {//__attribute__((__packed__)){
 uint32_t src_addr;
 uint32_t dest_addr;
-uint8_t flags;	
+uint8_t dev_error_code;	
 uint8_t state;
 uint8_t cmd;
 uint8_t var;	
 int16_t val;	
-uint16_t pack_ID;
-	
-uint32_t crc;	
+uint16_t pack_ID;	
+uint8_t desc[16];		
+uint32_t crc;		
+
 }WL_Packet;
 
 typedef union {

@@ -236,31 +236,31 @@ def toggle_boiler():
 #CIRC_MAIN / CIRC_HB / CIRC1_1 / CIRC1_2 / CIRC2_1 / CIRC2_2 
 
 def get_circ():	
-	res1 = wl_rw(config.wfcr_addr, CMD['GET'], var, 0)
-	res2 = wl_rw(config.wfcr_addr, CMD['GET'], var, 0)
+	res = wl_rw(config.wfcr_addr, CMD['GET'], var, 0)
+	#res2 = wl_rw(config.wfcr_addr, CMD['GET'], var, 0)
 	
-	if res1 != 'FAIL':
-		bit_str=str(bin(int(res1)))
+	if res != 'FAIL':
+		bit_str=str(bin(int(res)))
 		
-		config.circ[circ_fieldnames[2]]=bit_str[-5]
-		config.circ[circ_fieldnames[3]]=bit_str[-6]
-		config.circ[circ_fieldnames[4]]=bit_str[-7]
-		config.circ[circ_fieldnames[5]]=bit_str[-8]	
+		config.circ[circ_fieldnames[3]]=bit_str[-5]
+		config.circ[circ_fieldnames[2]]=bit_str[-6]
+		config.circ[circ_fieldnames[1]]=bit_str[-7]
+		config.circ[circ_fieldnames[0]]=bit_str[-8]	
 		
-	if res2 != 'FAIL':
-		bit_str=str(bin(int(res2)))
-		config.circ[circ_fieldnames[0]]=bit_str[-3]
-		config.circ[circ_fieldnames[1]]=bit_str[-4]
+#	if res2 != 'FAIL':
+#		bit_str=str(bin(int(res2)))
+#		config.circ[circ_fieldnames[0]]=bit_str[-3]
+#		config.circ[circ_fieldnames[1]]=bit_str[-4]
 	
 	config.write_boiler()
 	
 	return res	
 
 def set_circ(all_circ_val):	
-	res1 = wl_rw(config.wfcr_addr, CMD['SET'], VAR['STATE'], all_circ_val)
-	res2 = wl_rw(config.boiler_addr, CMD['SET'], VAR['STATE'], all_circ_val)
-	if res1 != 'FAIL' and res2 != 'FAIL':		
-		if res1 == 'DONE' and res2 == 'DONE':
+	res = wl_rw(config.wfcr_addr, CMD['SET'], VAR['STATE'], all_circ_val)
+#	res2 = wl_rw(config.boiler_addr, CMD['SET'], VAR['STATE'], all_circ_val)
+	if res != 'FAIL' :		
+		if res == 'DONE':
 			return 'OK'
 		else:
 			return 'Warning'
@@ -276,7 +276,7 @@ def toggle_circ(circ):
 	else:
 		config.circ[circ]='0'	
 		
-	bit_str='00'+ config.circ[config.circ_fieldnames[0]] + config.circ[config.circ_fieldnames[1]]+ config.circ[config.circ_fieldnames[2]] + config.circ[config.circ_fieldnames[3]] + config.circ[config.circ_fieldnames[4]] + config.circ[config.circ_fieldnames[5]]
+	bit_str='0000'+ config.circ[config.circ_fieldnames[0]] + config.circ[config.circ_fieldnames[1]]+ config.circ[config.circ_fieldnames[2]] + config.circ[config.circ_fieldnames[3]] 
 	
 
 	val=int(bit_str,2)

@@ -21,7 +21,7 @@ wts_base=16777216
 
 wts_fieldnames =  ['WTSN' , 'STATE' , 'TEMP' , 'NAME', 'CHECK']
 wf_blr_fieldnames =  ['T_CTRL' , 'TEMP' , 'TEMP_SET']
-circ_fieldnames =  ['CIRC_MAIN' ,'CIRC_HB' , 'CIRC1_1' , 'CIRC1_2' , 'CIRC2_1' , 'CIRC2_2']
+circ_fieldnames =  ['CIRC1_1' , 'CIRC1_2' , 'CIRC2_1' , 'CIRC2_2']
 
 wts = []
 wf = dict.fromkeys(wf_blr_fieldnames)

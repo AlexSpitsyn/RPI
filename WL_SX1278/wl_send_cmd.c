@@ -215,7 +215,7 @@ int main(int argc, char** argv) {
 						}else{
 				
 							//fprintf(fp, "ADDR;STATE;CMD;VAR;VAL\r\n" );
-							fprintf(fp, "%d;%d;%d;%d;%d",rx_pack.src_addr, rx_pack.state, rx_pack.cmd, rx_pack.var, rx_pack.val);	
+							fprintf(fp, "%d;%d;%d;%d;%d",rx_pack.src_addr, rx_pack.state, rx_pack.cmd,rx_pack.var, rx_pack.val);	
 							fclose(fp);
 						}
 						
@@ -231,7 +231,7 @@ int main(int argc, char** argv) {
 							
 						fprintf(fp, "%d %d %d %d %d %s", rx_pack.src_addr, rx_pack.state, rx_pack.cmd, rx_pack.var, rx_pack.val, asctime (timeinfo));	
 						fclose(fp);			
-						return rx_pack.state;
+						return WL_OK;
 					}
 					
 				}	
