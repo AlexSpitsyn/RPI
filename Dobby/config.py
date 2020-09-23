@@ -7,20 +7,19 @@ import csv
 #sys.setdefaultencoding('utf8')
 
 FILENAME_WL_SEND_RET = "retpack.txt"
-FILENAME_WTS_CONG = "wts_conf.txt"
+FILENAME_WTS_CONF = "wts_conf.txt"
 FILENAME_BOILER_CONF = "boiler_conf.txt"
 FILENAME_WF_CONF = "wf_conf.txt"
 FILENAME_CIRC_CONF = "circ_conf.txt"
 
 
-wts_addr=[22238295,39015511,55792727,72569943,89347159,106124375,122901591,139678807,156456023,173233239,190010455,206787671,223564887,240342103,257119319,273896535]
-wfcr_addr = 1380140631
-boiler_addr = 1380732738
-
+wts_addr=[0x53545701,0x54545701,0x55545701,0x56545701,0x57545701,0x58545701,0x59545701,0x5A545701,0x5B545701,0x5C545701,0x5D545701,0x5E545701,0x5F545701,0x60545701,0x61545701,0x62545701]
+wfcr_addr = 0x43465752
+boiler_addr = 0x4C4F4252
 wts_base=16777216
 
 wts_fieldnames =  ['WTSN' , 'STATE' , 'TEMP' , 'NAME', 'CHECK']
-wf_blr_fieldnames =  ['T_CTRL' , 'TEMP' , 'TEMP_SET']
+wf_blr_fieldnames =  ['STATE' ,'T_CTRL' , 'TEMP' , 'TEMP_SET']
 circ_fieldnames =  ['CIRC1_1' , 'CIRC1_2' , 'CIRC2_1' , 'CIRC2_2']
 
 wts = []
@@ -49,18 +48,18 @@ def read_wts():
 
 	#wts_line = []
 	try:
-		with open(FILENAME_WTS_CONG, "r") as in_file:
+		with open(FILENAME_WTS_CONF, "r") as in_file:
 			reader = csv.DictReader(in_file, delimiter=';')
 			for row in reader:			
 				wts.append(row)
 	except IOError:
-		print("Read file"+FILENAME_WTS_CONG + 'FAIL')
+		print("Read file"+FILENAME_WTS_CONF + 'FAIL')
 		
 	#return wts_line
 
 def write_wts():		
 		
-	with open(FILENAME_WTS_CONG, 'w') as out_file:
+	with open(FILENAME_WTS_CONF, 'w') as out_file:
 		writer = csv.DictWriter(out_file, delimiter=';', fieldnames=wts_fieldnames)
 		writer.writeheader()
 		for row in wts:
@@ -80,7 +79,7 @@ def wts_toggle_check(wts_num):
 		
 #=====================  WF =============================
 #------CONFIG-----------
-#STATE / TEMP / TEMP_SET
+#STATE / T_CTRL / TEMP / TEMP_SET
 #-----------------------
 def read_wf():
 
@@ -92,7 +91,7 @@ def write_wf():
 	
 #=====================  BOILER =============================
 #------CONFIG-----------
-#STATE / TEMP / TEMP_SET
+#STATE / T_CTRL / TEMP / TEMP_SET
 #-----------------------
 		
 def read_boiler():
