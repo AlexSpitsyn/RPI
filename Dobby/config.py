@@ -1,3 +1,5 @@
+#!/usr/bin/python
+# encoding=utf8
 
 import os
 import sys
@@ -14,13 +16,14 @@ FILENAME_CIRC_CONF = "circ_conf.txt"
 
 
 wts_addr=[0x53545701,0x54545701,0x55545701,0x56545701,0x57545701,0x58545701,0x59545701,0x5A545701,0x5B545701,0x5C545701,0x5D545701,0x5E545701,0x5F545701,0x60545701,0x61545701,0x62545701]
-wfcr_addr = 0x43465752
-boiler_addr = 0x4C4F4252
-wts_base=16777216
+wfcr_addr = 0x52434657
+boiler_addr = 0x524C4F42
+
+
 
 wts_fieldnames =  ['WTSN' , 'STATE' , 'TEMP' , 'NAME', 'CHECK']
-wf_blr_fieldnames =  ['STATE' ,'T_CTRL' , 'TEMP' , 'TEMP_SET']
-circ_fieldnames =  ['CIRC1_1' , 'CIRC1_2' , 'CIRC2_1' , 'CIRC2_2']
+wf_blr_fieldnames =  ['STATE' ,'T_CTRL' , 'TEMP' , 'TEMP_SET']# numeration must be like in wl.py WF_VAR
+circ_fieldnames =  ['CIRC1_1' , 'CIRC1_2' , 'CIRC2_1' , 'CIRC2_2']# numeration must be like in wl.py BOILER_VAR
 
 wts = []
 wf = dict.fromkeys(wf_blr_fieldnames)
@@ -65,7 +68,7 @@ def write_wts():
 		for row in wts:
 			writer.writerow(row)
 
-def wts_toggle_check(wts_num):	
+def wts_checking_toggle(wts_num):	
 
 	if wts[wts_num][wts_fieldnames[4]]=='0':
 		wts[wts_num][wts_fieldnames[4]]='1'
@@ -74,7 +77,15 @@ def wts_toggle_check(wts_num):
 	
 	write_wts()
 	
-		
+def wts_checking_onoff(wts_num, onoff):	
+
+	if onoff=='on':
+		wts[wts_num][wts_fieldnames[4]]='1'
+	elif onoff=='off':
+		wts[wts_num][wts_fieldnames[4]]='0'
+	else:
+		print('wrong wts_check_onoff arg')
+	write_wts()		
 		
 		
 #=====================  WF =============================

@@ -3,38 +3,54 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <string.h>
 #include "crc32.h"
 
 #define PACKET_SIZE		36
 
-enum PACK_STATE{
-  PS_NEW,
-  PS_OK,
-  PS_CMD_NOT_SUPPORTED,
-  PS_VAR_NOT_SUPPORTED,
-  PS_VAL_NOT_SUPPORTED,
-  PS_CRC_BAD,
-  PS_ERROR
+enum WL_CMD_STATE{								
+	CMD_DONE,				//0
+	CMD_NOT_SUPPORTED,		//1
+	VAR_NOT_SUPPORTED,		//2
+	VAL_NOT_SUPPORTED,		//3	
+	CMD_ERROR				//4
+};
+
+#define CMD_STATE_STR_CNT	5
+static const char* CMD_STATE_STR[CMD_STATE_STR_CNT] = { 		
+		"DONE",		
+		"CMD NOT SUPPORTED",
+		"VAR NOT SUPPORTED",
+		"VAL NOT SUPPORTED",		
+		"ERROR"
 };
 
 enum WL_STATE{
-  WL_OK,
-  WL_OFFLINE,  
-  WL_CMD_NOT_SUPPORTED,
-  WL_VAR_NOT_SUPPORTED,
-  WL_VAL_NOT_SUPPORTED,
-  WL_CRC_BAD,
+  WL_OK ,   
   WL_ADDRESS_FAIL,
-  WL_ERROR
+  WL_CRC_BAD, 
+  WL_ERROR,
+  WL_OFFLINE  
 };
 
-enum CMD_STATE{
+
+enum WL_CMD{
 	CMD_PRESENT,
 	CMD_GET,
 	CMD_SET,
 	CMD_EEPROM_WR,
 	CMD_ERR_CLR
 };
+
+#define CMD_STR_CNT	5
+static const char* CMD_STR[CMD_STR_CNT] = { 
+		"PRESENT",
+		"GET",
+		"SET",
+		"EEPROM_WR",
+		"ERR_CLR"
+		};
+
 
 
 typedef struct {//__attribute__((__packed__)){
@@ -64,7 +80,7 @@ typedef struct{
   int16_t val;
 }WTS;
 
-void print_packet(WL_Packet* pack);
+void print_packet(WL_Packet* pack,FILE *fp);
 void convert_data_to_pack(uint8_t* data, WL_Packet* pack);
 void convert_pack_to_data(uint8_t* data, WL_Packet* pack);
 	

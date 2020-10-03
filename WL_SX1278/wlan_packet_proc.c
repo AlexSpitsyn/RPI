@@ -1,16 +1,16 @@
 #include "wlan_packet_proc.h"
 
-void print_packet(WL_Packet* pack){
-  printf("CMD: 0x%02X\n\r",pack->cmd);
-  printf("VAR: 0x%02X\n\r",pack->var);
-  printf("VAL: 0x%04X\n\r",pack->val);
-  printf("DESC: %s\n\r",pack->desc);
-  printf("P_ID: 0x%04X\n\r",pack->pack_ID);
-  printf("DEST ADDR: 0x%08X\n\r",pack->dest_addr);
-  printf("SRC ADDR: 0x%08X\n\r",pack->src_addr);
-  printf("DEV ERROR CODE: 0x%08X\n\r",pack->src_addr);
-  printf("STATE: 0x%02X\n\r",pack->state);
-  printf("CRC: 0x%08X\n\r",pack->crc);
+void print_packet(WL_Packet* pack, FILE *fp){
+  fprintf(fp, "CMD: 0x%02X\n\r",pack->cmd);
+  fprintf(fp, "VAR: 0x%02X\n\r",pack->var);
+  fprintf(fp, "VAL: 0x%04X\n\r",pack->val);
+  fprintf(fp, "DESC: %s\n\r",pack->desc);
+  fprintf(fp, "P_ID: 0x%04X\n\r",pack->pack_ID);
+  fprintf(fp, "DEST ADDR: 0x%08X\n\r",pack->dest_addr);
+  fprintf(fp, "SRC ADDR: 0x%08X\n\r",pack->src_addr);
+  fprintf(fp, "DEV ERROR CODE: 0x%08X\n\r",pack->dev_error_code);
+  fprintf(fp, "STATE: 0x%02X\n\r",pack->state);
+  fprintf(fp, "CRC: 0x%08X\n\r",pack->crc);
 }
 
 void convert_data_to_pack(uint8_t* data, WL_Packet* pack){

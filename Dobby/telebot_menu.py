@@ -1,10 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[ ]:
-
-
-# -*- coding: utf-8 -*-
 import telebot
 from telebot import apihelper, types, util
 
@@ -13,7 +9,7 @@ import config
 
 
 wl.DEBUG =True
-wl.EMULATION = True
+wl.EMULATION = False
 
 Alex_ID = 972228317
 
@@ -165,7 +161,11 @@ def callback_inline(call):
     global gcall    
     global message_out_cnt
     gcall=call
-    
+
+
+    #------------------------------------------------------------------------------------
+    #                                        MAIN MENU
+    #------------------------------------------------------------------------------------
     if call.data == "mainmenu":
         mainmenu = types.InlineKeyboardMarkup()
         key1 = types.InlineKeyboardButton(text='Прочее', callback_data='other')
@@ -179,7 +179,10 @@ def callback_inline(call):
         #bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=mainmenu)
         input_str_type='0'
         
-    
+    #------------------------------------------------------------------------------------
+    #                                   TEMPERATURE
+    #------------------------------------------------------------------------------------
+
     elif call.data == "temp":
         temp_menu = types.InlineKeyboardMarkup()
         key1 = types.InlineKeyboardButton(text='Инф', callback_data='print_temp')
@@ -192,6 +195,9 @@ def callback_inline(call):
         bot.edit_message_text('Температура', call.message.chat.id, call.message.message_id,
                               reply_markup=temp_menu)
 
+    #------------------------------------------------------------------------------------
+    #                                 HEAT SELECT
+    #------------------------------------------------------------------------------------
     elif call.data == "heat_select":
 
         heat_select_menu = types.InlineKeyboardMarkup()
@@ -204,7 +210,10 @@ def callback_inline(call):
         heat_select_menu.row(key_back, key_home)
         bot.edit_message_text('Отопление', call.message.chat.id, call.message.message_id,
                               reply_markup=heat_select_menu)
-
+    
+    #------------------------------------------------------------------------------------
+    #                                   PARNIC
+    #------------------------------------------------------------------------------------
     elif call.data == "parn":
         parn_menu = types.InlineKeyboardMarkup()
         key1 = types.InlineKeyboardButton(text='Передняя дв.', callback_data='front_door')
@@ -219,6 +228,9 @@ def callback_inline(call):
         bot.edit_message_text('Парник', call.message.chat.id, call.message.message_id,
                               reply_markup=parn_menu)
 
+    #------------------------------------------------------------------------------------
+    #                                   OTHER
+    #------------------------------------------------------------------------------------
     elif call.data == "other":
         other_menu = types.InlineKeyboardMarkup()
         key1 = types.InlineKeyboardButton(text='Септик', callback_data='front_door')
@@ -230,6 +242,46 @@ def callback_inline(call):
         other_menu.row(key_back, key_home)
         bot.edit_message_text('Прочее', call.message.chat.id, call.message.message_id,
                               reply_markup=other_menu)
+        
+     
+    #------------------------------------------------------------------------------------
+    #                      TEMPERATURE -> INFO
+    #------------------------------------------------------------------------------------
+    elif call.data.split('@')[0] == "print_temp":
+        tempinfo = "Данные датчиков:\r\n"
+        for wts_conf in config.wts:
+            if wts_conf["CHECK"] =='1':
+                wl.dbg_print()
+                tempinfo = tempinfo + 'Д' + wts_conf["WTSN"] +' - '+ wts_conf["NAME"] +': '+ wts_conf["TEMP"] + '\r\n'        
+        wl.dbg_print(tempinfo)
+        bot.send_message(call.message.chat.id,  tempinfo)   
+        message_out_cnt+=1
+        
+        
+    #------------------------------------------------------------------------------------
+    #                      TEMPERATURE -> WTS OPTIONS
+    #------------------------------------------------------------------------------------
+    elif call.data.split('@')[0] == "wts_options":
+        wts_num=int(call.data.split('@')[1])-1
+        key_back.callback_data='wts_select'
+        drow_wts_menu()
+    
+    elif  call.data == "wts_onoff": 
+        config.wts_checking_toggle(wts_num)
+        drow_wts_menu()    
+    
+    elif  call.data == "wts_update": 
+        config.wts_checking_onoff(wts_num, 'on')#turn wts ON
+        wl.read_wts(wts_num)        
+        drow_wts_menu()
+ 
+    elif  call.data == "set_wts_name":
+        input_str_type='wts_name';       
+        bot.send_message(call.message.chat.id,  "Напишите название датчика\n Имя должно начинаться с #")   
+        message_out_cnt+=1
+    #------------------------------------------------------------------------------------
+    #            TEMPERATURE -> WTS OPTIONS -> WTS SELECT
+    #------------------------------------------------------------------------------------
 
     elif call.data == "wts_select":
         wts_select_menu = types.InlineKeyboardMarkup()
@@ -259,46 +311,41 @@ def callback_inline(call):
         bot.edit_message_text('Настройки датчиков', call.message.chat.id, call.message.message_id,
                               reply_markup=wts_select_menu)
 
-    
-    elif call.data.split('@')[0] == "wts_options":
-        wts_num=int(call.data.split('@')[1]) -1  
-        drow_wts_menu()
-    
-    elif  call.data == "wts_onoff": 
-        config.wts_toggle_check(wts_num)
-        drow_wts_menu()    
-    
-    elif  call.data == "wts_update":        
-        wl.read_wts(wts_num)        
-        drow_wts_menu()
- 
-    elif  call.data == "set_wts_name":
-        input_str_type='wts_name';       
-        bot.send_message(call.message.chat.id,  "Напишите название датчика\n Имя должно начинаться с #")   
-        message_out_cnt+=1
+
         
-    
+    #------------------------------------------------------------------------------------
+    #                           HEAT SELECT -> BOILER OPTIONS
+    #------------------------------------------------------------------------------------
     elif call.data == "boiler_options":        
         drow_boiler_menu()
-        key_back.callback_data='heat_select'
         
     elif call.data == "boiler_onoff":
-        drow_boiler_menu()          
+        if config.boiler['T_CTRL']=='0':
+            wl.set_boiler(wl.BOILER_VAR['T_CTRL'], 1)
+        elif config.boiler['T_CTRL']=='1':	
+            wl.set_boiler(boiler.WF_VAR['T_CTRL'], 1)
+        drow_boiler_menu()
 
-    elif call.data == "boiler_update":         
+    elif call.data == "boiler_update":
+        wl.boiler_update()
         drow_boiler_menu()  
-    
+
+    #------------------------------------------------------------------------------------
+    #                         HEAT SELECT -> WF OPTIONS
+    #------------------------------------------------------------------------------------
     elif call.data == "wf_options":        
         drow_wf_menu()
-        key_back.callback_data='heat_select'
         
-    elif call.data == "wf_onoff":       
-        drow_wf_menu()          
+    elif call.data == "wf_onoff": 
+        if config.wf['T_CTRL']=='0':
+            wl.set_wf(wl.WF_VAR['T_CTRL'], 1)
+        elif config.wf['T_CTRL']=='1':
+            wl.set_wf(wl.WF_VAR['T_CTRL'], 1)
+        drow_wf_menu() 
 
     elif call.data == "wf_update": 
+        wl.update_wf()
         drow_wf_menu()  
-       
-    
     
     elif call.data.split('@')[0] == "set_temp": 
         temp_type=call.data.split('@')[1]
@@ -306,7 +353,9 @@ def callback_inline(call):
        
         bot.send_message(call.message.chat.id,  "Введите температуру")   
         message_out_cnt+=1
-
+    #------------------------------------------------------------------------------------
+    #                     HEAT SELECT -> CIRC OPTIONS
+    #------------------------------------------------------------------------------------
     elif call.data == "circulators":
         drow_circ_menu()
         key_back.callback_data='heat_select'
@@ -317,7 +366,9 @@ def callback_inline(call):
         drow_circ_menu()
 
         
-        
+    #------------------------------------------------------------------------------------
+    #                               PARNIC OPTIONS
+    #------------------------------------------------------------------------------------    
     elif call.data == "front_door":
         front_door_menu = types.InlineKeyboardMarkup()
 
@@ -384,34 +435,35 @@ def drow_wts_menu():
     wts_state = config.wts[wts_num]["STATE"]
 
     if wts_check == '1':       
-        if wts_state == 'WL_OK':
+        if wts_state == 'OK':
             button_onoff_text='✅'
-        elif wts_state == 'WL_OFFLINE':
+        elif wts_state == 'OFFLINE':
             button_onoff_text='🛑'#offline   
         else:
-            button_onoff_text='⚠️\r\n'+ wts_state             
-        header_str = 'Д'+ str(wts_num+1) +'\t\t'+  wts_name +'\t\t' + wts_temp +'°C' 
+            button_onoff_text='⚠️\r\n'+ wts_state  
+
+        header_str = 'Д'+ str(wts_num+1) +'  '+  wts_name +'  ' + wts_temp +'°C' 
        
     else:        
         button_onoff_text='⏹'#not checked  
-        header_str = 'Д'+ str(wts_num+1) +'\t\t'+ wts_name + '- OFF'    
+        header_str = 'Д'+ str(wts_num+1) +'  '+ wts_name + '- OFF'    
     
     wts_options_menu = types.InlineKeyboardMarkup() 
     key1 = types.InlineKeyboardButton(text=button_onoff_text, callback_data='wts_onoff')
     key2 = types.InlineKeyboardButton(text='Имя', callback_data='set_wts_name')
     key3 = types.InlineKeyboardButton(text='🔄', callback_data='wts_update')
     
-    #key_back.callback_data='wts_select'
+    key_back.callback_data='wts_select'
     wts_options_menu.add(key1, key2, key3)
     wts_options_menu.row(key_back, key_home)
 
     markup = wts_options_menu
-    if gcall.message.text != header_str and gcall.message.json['reply_markup']['inline_keyboard'][0][0]['text'] != button_onoff_text:
+   
+    if gcall.message.text != header_str or gcall.message.json['reply_markup']['inline_keyboard'][0][0]['text'] != button_onoff_text:
         message_out=bot.edit_message_text(header_str, gcall.message.chat.id, gcall.message.message_id, reply_markup=markup)
 
 def drow_boiler_menu():
-    global gcall   
-    print (config.boiler)
+    global gcall       
 
     state = config.boiler[config.wf_blr_fieldnames[0]]
     temp_ctrl = config.boiler[config.wf_blr_fieldnames[1]]
@@ -444,7 +496,7 @@ def drow_boiler_menu():
     boiler_options_menu.add(key1, key2, key3)
     boiler_options_menu.row(key_back, key_home)
     markup = boiler_options_menu
-    if gcall.message.text != header_str and gcall.message.json['reply_markup']['inline_keyboard'][0][0]['text'] != button_onoff_text:
+    if gcall.message.text != header_str or gcall.message.json['reply_markup']['inline_keyboard'][0][0]['text'] != button_onoff_text:
         message_out=bot.edit_message_text(header_str, gcall.message.chat.id, gcall.message.message_id,
                          reply_markup=markup)
 def drow_wf_menu():
@@ -476,14 +528,14 @@ def drow_wf_menu():
     key1 = types.InlineKeyboardButton(text=button_onoff_text, callback_data='wf_onoff')
     key2 = types.InlineKeyboardButton(text='Уст.темп', callback_data='set_temp@wf')
     key3 = types.InlineKeyboardButton(text='🔄', callback_data='wf_update')    
-    #key_back.callback_data='heat_select'
+    key_back.callback_data='heat_select'
     
     wf_options_menu.add(key1, key2, key3)
     wf_options_menu.row(key_back, key_home)
     markup = wf_options_menu    
       
      
-    if gcall.message.text != header_str and gcall.message.json['reply_markup']['inline_keyboard'][0][0]['text'] != button_onoff_text:
+    if gcall.message.text != header_str or gcall.message.json['reply_markup']['inline_keyboard'][0][0]['text'] != button_onoff_text:
     #    header_str = header_str + '-'
         message_out=bot.edit_message_text(header_str, gcall.message.chat.id, gcall.message.message_id, reply_markup=markup)
     
@@ -556,7 +608,7 @@ def drow_circ_menu():
     key6 = types.InlineKeyboardButton(text=button4_text + '  Спальная 2.3 -2.4.', callback_data='circ_toggle@CIRC2_2')
     
    
-    #key_back.callback_data='heat_select'        
+    key_back.callback_data='heat_select'        
     #circulators_menu.row(key1)
     #circulators_menu.row(key2)
     circulators_menu.row(key3)
@@ -569,127 +621,3 @@ def drow_circ_menu():
     message_out=bot.edit_message_text('Насосы', gcall.message.chat.id, gcall.message.message_id, reply_markup=markup)
     
 bot.polling()
-
-
-# In[2]:
-
-
-import config
-import wl
-config.init()
-print (wl.toggle_circ('CIRC_MAIN'))
-
-#print (config.boiler)
-#print (wl.CMD['SET'])
-
-
-# In[ ]:
-
-
-import config
-import wl
-config.init()
-
-bit_str = '00000000' 
-bit_str=config.circ[config.circ_fieldnames[0]]+
-print(type(bit_str[-3]))
-bit_str[-3]=config.circ[config.circ_fieldnames[0]]
-print (type(config.circ[config.circ_fieldnames[0]]))
-#bit_str[-3]=config.circ[config.circ_fieldnames[0]]
-#bit_str[-4]=config.circ[config.circ_fieldnames[1]]
-#bit_str[-5]=config.circ[config.circ_fieldnames[2]]
-#bit_str[-6]=config.circ[config.circ_fieldnames[3]]
-#bit_str[-7]=config.circ[config.circ_fieldnames[4]]
-#bit_str[-8]=config.circ[config.circ_fieldnames[5]]
-
-
-# In[ ]:
-
-
-import config
-config.init()
-print (config.wts[0]['NAME'])
-
-
-# In[ ]:
-
-
-import config
-import wl
-var = '1'
-val = '1'
-#config.boiler[list(wl.VAR.keys())[int(var)]]=str(val)
-#print ( config.boiler[list(wl.VAR.keys())[int(var)]])
-
-fieldnames = list(config.circ.keys())
-print(fieldnames)
-file_handler = open(config.FILENAME_CIRC_CONF, 'r')
-
-file_handler.readline() # read fielnames
-data= file_handler.readline() # read config
-
-parts=data.rstrip().split(';')
-
-for i in range(len(config.circ.keys())):
-    config.circ[fieldnames[i]]=parts[i]
-
-file_handler.close()
-
-
-# In[3]:
-
-
-import config
-config.init()
-
-
-config.write_boiler()
-config.write_wf()
-config.write_wts()
-
-
-# In[ ]:
-
-
-import sys
-
-file_handler = open(FILENAME_CIRC_CONF, 'r')
-file_handler.readline() # read just one line
-data= file_handler.readline() # read just one line
-parts=data.split(';')
-circ[circ_fieldnames[0]]=parts[0]
-circ[circ_fieldnames[1]]=parts[1]
-circ[circ_fieldnames[2]]=parts[2]
-circ[circ_fieldnames[3]]=parts[3]
-circ[circ_fieldnames[4]]=parts[4]
-circ[circ_fieldnames[5]]=parts[5]
-
-file_handler.close()
-
-
-# In[ ]:
-
-
-import wl
-
-v = '0'
-
-print(wl.WL_CMD_STATE[int(v)] )
-
-
-# In[8]:
-
-
-
-retval = "230"
-bit_str=str(bin(int(retval)))
-bit_str = bit_str + '00000000'
-val=int(bit_str,2)
-print (val)
-
-
-# In[ ]:
-
-
-
-

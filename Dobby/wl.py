@@ -4,53 +4,20 @@
 
 import subprocess 
 import config
-import os
 
 #reload (sys)
 #sys.setdefaultencoding('utf8')
 
 DEBUG = False
 EMULATION = False
-
+DEBUG_SX1278 = False
+LOG_SX1278 = False
 
 def dbg_print(*args, **kwargs):
    if DEBUG:
       print(*args, **kwargs)
 	  
 	  
-WTS_VAR = {
-	'TEMP':'0',	
-	'T_UPDT_TIME':'1'
-}
-
-
-WF_VAR = {
-	'temp':'0',
-	't_ctrl':'1',
-	't_set':'2',
-	't_ctrl_time':'3',
-	't_updt_time':'4',
-	't_hyst':'5',
-	'pump':'6',
-	'drv_pos':'7',
-	'drv_pos_max':'8',
-	'drv_pos_dest':'9',
-	'drv_steps':'10'
-}
-
-BOILER_VAR = {
-	'temp':'0',
-	't_ctrl':'1',
-	't_set':'2',
-	't_ctrl_time':'3',
-	't_updt_time':'4',
-	't_hyst':'5',
-	'pump':'6',
-	'burner':'7',
-	't_th':'8',
-}
-
-
 
 CMD = {'CMD_PRESENT':'0',
 	'GET':'1', 
@@ -78,85 +45,70 @@ WL_STATE={
 };
 
 
-last_pack_state = 0
-
-
-# def wl_send_data(addr, cmd, var, val):
-	# if EMULATION:
-		# dbg_print ('Warning!!! Emulation mode')
-		# dbg_print ("wl_send_cmd", hex(addr), cmd,var, val)
-		# wl_state=0#WL_OK
-	# else:
-		# wl_state = subprocess.call(["wl_send_cmd", hex(addr), cmd,var, val]) 
-	
-		
-	# last_pack_state = wl_state
-	# dbg_print ("WL PACK STATE: " + WL_STATE[wl_state])
-	# return wl_state
-
-
 
 def wl_rw(addr, cmd, var, val):
 
-	dbg_print ('wl_send addr:',addr, 'cmd:', cmd, 'var:', var, 'val:', val)
+	d=''
+	l=''
+	dbg_print ('wl_send addr:',hex(addr), 'cmd:', cmd, 'var:', var, 'val:', val)
 	
 	
 
 	if EMULATION:
 		dbg_print ('Warning!!! Emulation mode')
 		dbg_print ("wl_send_cmd", hex(addr), cmd,var, val)
-		wl_send_state=0#WL_OK
+		wl_send_code=0#WL_OK
+		wl_send_ret_str="12345678;0;0;0;test;0"
 	else:
-		wl_send_state = subprocess.call(["wl_send_cmd", hex(addr), cmd,var, val]) 
-	
+		if DEBUG_SX1278:
+			d='-d'
 		
-	#last_pack_state = wl_state
-	dbg_print ("WL PACK STATE: " + WL_STATE[wl_send_state])
+		if LOG_SX1278:
+			l='-l'
+			
+		res = subprocess.run(["wl_send_cmd", str(hex(addr)), cmd,var, str(val), d, l],stdout=subprocess.PIPE, encoding='utf-8')	
+		wl_send_code=res.returncode
+		wl_send_ret_str=res.stdout
+		
+	dbg_print ("WL PACK STATE: ",wl_send_code, ' / '+ WL_STATE[wl_send_code])
 
-	if wl_send_state==0:#WL_OK
-	
-		try:
-			# ADDR;STATE;CMD;VAR;VAL;DESC:ERROR_CODE
-			file_handler = open(config.FILENAME_WL_SEND_RET)
-			data= file_handler.readline() # read just one line
-			parts=data.split(';')
-			addr = parts[0]	
-			cmd_state = int(parts[1])
-			#cmd = parts[2]	
-			var = parts[3]
-			val = parts[4]	
-			desc = parts[5]	
-			dev_error_code = parts[6]
-			dbg_print('ADDR: ', addr)
-			dbg_print('CMD STATE: ', WL_CMD_STATE[cmd_state])
-			dbg_print('CMD: ', cmd)
-			dbg_print('VAR: ', var)
-			dbg_print('VAL: ', val)
-			dbg_print('DESC: ', desc)
-			dbg_print('DEV ERRROR CODE: ', dev_error_code)
-			file_handler.close()
-			
-			#REMOVE FILE AFTER READING
+	if wl_send_code==0:#WL_OK
 		
-			if EMULATION:
-				dbg_print ('Warning!!! Emulation mode. File retpack.txt not removed')				
-			else:
-				os.remove(config.FILENAME_WL_SEND_RET)	
-			
-			return WL_STATE[wl_send_state], WL_CMD_STATE[cmd_state], dev_error_code, val
+		# ADDR;STATE;CMD;VAR;VAL;DESC:ERROR_CODE		
+		parts=wl_send_ret_str.split(';')
+		addr = parts[0]	
+		cmd_state = int(parts[1])
+		#cmd = parts[2]	
+		var = parts[3]
+		val = parts[4]	
+		desc = parts[5]	
+		dev_error_code = parts[6]
+		
+		
+		dbg_print('ADDR: ', addr)
+		dbg_print('CMD STATE: ', WL_CMD_STATE[cmd_state])
+		dbg_print('CMD: ', cmd)
+		dbg_print('VAR: ', var)
+		dbg_print('VAL: ', val)
+		dbg_print('DESC: ', desc)
+		dbg_print('DEV ERRROR CODE: ', dev_error_code)		
 
-			
-		except IOError:
-			print("An IO Error has occurred!")		
-			return 'FAIL','File read error','0','0'
 		
+		return WL_STATE[wl_send_code], WL_CMD_STATE[cmd_state], dev_error_code, val
+	
 	else:		
-		return WL_STATE[wl_send_state],WL_STATE[wl_send_state],'0','0'
+		return WL_STATE[wl_send_code],wl_send_ret_str,'0','0'
 
 
 	
 	
 #=====================  WTS =============================	
+	
+WTS_VAR = {
+	'temp':'0',	
+	't_updt_time':'1'
+}
+
 def read_wts(wtsn):
 	#wl_rw retval WL_STATE, WL_CMD_STATE, DEV ERRROR CODE, VALUE
 	# WL_STATE:		'OK',
@@ -171,10 +123,9 @@ def read_wts(wtsn):
 	#				'VAR NOT SUPPORTED'
 	#				'VAL NOT SUPPORTED'	
 	#				'ERROR'
+
 	
-	
-	
-	wl_send_state, cmd_state, dev_error_code, retval = wl_rw(config.wts_addr[wtsn], CMD['GET'], WTS_VAR['TEMP'], 0)
+	wl_send_state, cmd_state, dev_error_code, retval = wl_rw(config.wts_addr[wtsn], CMD['GET'], WTS_VAR['temp'], 0)
 	
 	if dev_error_code != '0':
 		dbg_print('WARNING! DevERC: ' + str(dev_error_code))		
@@ -185,7 +136,8 @@ def read_wts(wtsn):
 	
 	if wl_send_state==WL_STATE[0]:#OK
 		if cmd_state=='DONE':		
-			config.wts[wtsn]["TEMP"] = retval			
+			config.wts[wtsn]["TEMP"] = retval
+			dbg_print('Write wts config! ', config.wts[wtsn])
 		else:
 			dbg_print('WARNING! ', cmd_state)
 			config.wts[wtsn]["TEMP"] = 'X'
@@ -196,11 +148,27 @@ def read_wts(wtsn):
 	
 	return cmd_state
 
-
+def update_wts():
+	for wts_conf in config.wts:
+		if wts_conf["CHECK"] =='1':			
+			res = read_wts(int(wts_conf["WTSN"]))
+			wl.dbg_print('Read WTS' + wts_conf["WTSN"]+':'+ res)
 
 #=====================  WF ================ ====== =======
 #STATE / T_CTRL / TEMP / TEMP_SET
-
+WF_VAR = {
+	'TEMP':'0',
+	'T_CTRL':'1',
+	'TEMP_SET':'2',
+	't_ctrl_time':'3',
+	't_updt_time':'4',
+	't_hyst':'5',
+	'pump':'6',
+	'drv_pos':'7',
+	'drv_pos_max':'8',
+	'drv_pos_dest':'9',
+	'drv_steps':'10'
+}
 def send_to_wf(cmd, var, val):
 	
 	wl_send_state, cmd_state, dev_error_code, retval = wl_rw(config.wfcr_addr, cmd, var, val)
@@ -212,13 +180,13 @@ def send_to_wf(cmd, var, val):
 			
 	if wl_send_state==WL_STATE[0]:#OK			 
 		if cmd_state=='DONE':
-			config.wf[list(VAR.keys())[int(var)]]=str(retval)
+			config.wf[list(WF_VAR.keys())[int(var)]]=str(retval)
 		else:
 			dbg_print('WARNING! ', cmd_state)
-			config.wf[list(VAR.keys())[int(var)]] = 'X'
+			config.wf[list(WF_VAR.keys())[int(var)]] = 'X'
 	else:
 		dbg_print('WARNING! ', wl_send_state)
-		config.wf[list(VAR.keys())[int(var)]] = 'X'
+		config.wf[list(WF_VAR.keys())[int(var)]] = 'X'
 	
 	config.write_wf()
 	
@@ -232,6 +200,7 @@ def set_wf(var, val):
 	return send_to_wf(CMD['SET'], var, val)	
 	
 def update_wf():
+	
 	if get_wf(WF_VAR['T_CTRL']) == 'DONE' and get_wf(WF_VAR['TEMP']) == 'DONE' and get_wf(WF_VAR['TEMP_SET']) == 'DONE':
 		return 'OK'
 	else:
@@ -251,6 +220,17 @@ def toggle_wf():
 #------CONFIG-----------
 #STATE / T_CTRL / TEMP / TEMP_SET
 #-----------------------
+BOILER_VAR = {
+	'TEMP':'0',
+	'T_CTRL':'1',
+	'TEMP_SET':'2',
+	't_ctrl_time':'3',
+	't_updt_time':'4',
+	't_hyst':'5',
+	'pump':'6',
+	'burner':'7',
+	't_th':'8',
+}
 
 def send_to_boiler(cmd, var, val):
 	
@@ -263,13 +243,13 @@ def send_to_boiler(cmd, var, val):
 			
 	if wl_send_state==WL_STATE[0]:#OK			 
 		if cmd_state=='DONE':
-			config.boiler[list(VAR.keys())[int(var)]]=str(retval)
+			config.boiler[list(BOILER_VAR.keys())[int(var)]]=str(retval)
 		else:
 			dbg_print('WARNING! ', cmd_state)
-			config.boiler[list(VAR.keys())[int(var)]] = 'X'
+			config.boiler[list(BOILER_VAR.keys())[int(var)]] = 'X'
 	else:
 		dbg_print('WARNING! ', wl_send_state)
-		config.boiler[list(VAR.keys())[int(var)]] = 'X'
+		config.boiler[list(BOILER_VAR.keys())[int(var)]] = 'X'
 	
 	config.write_boiler()
 	
@@ -344,7 +324,7 @@ def get_circ():
 def circ_onoff(circ_name, onoff):
 		
 	config.circ[circ_name]=str(onoff)
-	bit_str='0000'+ config.circ[config.circ_fieldnames[0]] + config.circ[config.circ_fieldnames[1]]+ config.circ[config.circ_fieldnames[2]] + config.circ[config.circ_fieldnames[3]] + '00000000'
+	bit_str='000000010000'+ config.circ[config.circ_fieldnames[0]] + config.circ[config.circ_fieldnames[1]]+ config.circ[config.circ_fieldnames[2]] + config.circ[config.circ_fieldnames[3]] 
 	
 	val=int(bit_str,2)	
 	
@@ -356,7 +336,7 @@ def circ_onoff(circ_name, onoff):
 			
 	if wl_send_state==WL_STATE[0]:#OK			 
 		if cmd_state=='DONE':					
-			dbg_print('CIRC RETURN VAL: ' + bit_str)
+			dbg_print('CIRC RETURN VAL: ' + str(hex(int(retval))))
 		else:
 			dbg_print('WARNING! ', cmd_state)
 			config.circ[circ_name]='X'
@@ -365,7 +345,7 @@ def circ_onoff(circ_name, onoff):
 		dbg_print('WARNING! ', wl_send_state)
 		config.circ[circ_name]='X'	
 	
-	config.write_boiler()				
+	config.write_circ()				
 		
 	return cmd_state
 	

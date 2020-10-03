@@ -4,10 +4,7 @@
 CC=gcc
 CFLAGS=-lpigpio -lrt -pthread -lm
 
-all: read_wts_num wl_send_cmd
-
-read_wts_num: read_wts_num.o crc32.o wlan_packet_proc.o LoRa.o 
-	$(CC) $(CFLAGS) wlan_packet_proc.o read_wts_num.o crc32.o LoRa.o -o read_wts_num 
+all: wl_send_cmd
 
 wl_send_cmd: wl_send_cmd.o crc32.o wlan_packet_proc.o LoRa.o 
 	$(CC) $(CFLAGS) wlan_packet_proc.o wl_send_cmd.o crc32.o LoRa.o -o wl_send_cmd 
@@ -15,9 +12,6 @@ wl_send_cmd: wl_send_cmd.o crc32.o wlan_packet_proc.o LoRa.o
 crc32.o: crc32.c
 	$(CC) $(CFLAGS) -c crc32.c
 
-read_wts_num.o: read_wts_num.c
-	$(CC) $(CFLAGS) -c read_wts_num.c
-	
 wl_send_cmd.o: wl_send_cmd.c
 	$(CC) $(CFLAGS) -c wl_send_cmd.c
 
@@ -32,9 +26,7 @@ clean:
 	rm -rf *.o read_wts_num 
 install:
 	install  ./wl_send_cmd /usr/local/bin
-	install  ./read_wts_num /usr/local/bin
-#	cp read_wts_num /usr/local/bin/read_wts_num
+	
 uninstall:
 	rm -f /usr/local/bin/wl_send_cmd
-	rm -f /usr/local/bin/read_wts_num
-#	rm -f /usr/local/bin/nrf_init
+
