@@ -13,9 +13,6 @@ wl.EMULATION = False
 
 Alex_ID = 972228317
 
-#https://hidemy.name/ru/proxy-list/?type=5#list
-#telebot.apihelper.proxy = {'https':'socks5://185.161.211.25:1080'}
-
 TOKEN = '927942451:AAG7HMnzpyLVKcydJiEW0zGjOcnqi7_1EDE'
 
 bot = telebot.TeleBot(TOKEN)
@@ -99,10 +96,10 @@ def inline_key(a):
         if(a.text.isdigit()):
             
             if temp_type == 'boiler':
-                if int(a.text) > config.temp['BOILER_MIN'] and int(a.text) < config.temp['BOILER_MAX']:
+                if int(a.text) >= config.temp['BOILER_MIN'] and int(a.text) <= config.temp['BOILER_MAX']:
                     message_out_cnt+=1
-                   
-                    if wl.set_boiler(wl.VAR['T_SET'], int(a.text)) == 'FAIL' :
+                   #wl.set_boiler() return WL_CMD_STATE
+                    if wl.set_boiler(wl.BOILER_VAR['TEMP_SET'], int(a.text)) != wl.WL_CMD_STATE[0]:
                         bot.send_message(call.message.chat.id,  "Что-то пошло не так... Тут нужна магия")               
                     else:
                         drow_boiler_menu()                      
@@ -122,7 +119,7 @@ def inline_key(a):
                 if int(a.text) > config.temp['WF_MIN'] and int(a.text) < config.temp['WF_MAX']:                    
                     message_out_cnt+=1
                    
-                    if wl.set_wf(wl.VAR['T_SET'], int(a.text)) == 'FAIL' :
+                    if wl.set_wf(wl.WF_VAR['TEMP_SET'], int(a.text)) != wl.WL_CMD_STATE[0]:
                         bot.send_message(call.message.chat.id,  "Что-то пошло не так... Тут нужна магия")               
                     else:
                         drow_wf_menu()                      
@@ -323,11 +320,11 @@ def callback_inline(call):
         if config.boiler['T_CTRL']=='0':
             wl.set_boiler(wl.BOILER_VAR['T_CTRL'], 1)
         elif config.boiler['T_CTRL']=='1':	
-            wl.set_boiler(boiler.WF_VAR['T_CTRL'], 1)
+            wl.set_boiler(wl.BOILER_VAR['T_CTRL'], 0)
         drow_boiler_menu()
 
     elif call.data == "boiler_update":
-        wl.boiler_update()
+        wl.update_boiler()
         drow_boiler_menu()  
 
     #------------------------------------------------------------------------------------
@@ -340,7 +337,7 @@ def callback_inline(call):
         if config.wf['T_CTRL']=='0':
             wl.set_wf(wl.WF_VAR['T_CTRL'], 1)
         elif config.wf['T_CTRL']=='1':
-            wl.set_wf(wl.WF_VAR['T_CTRL'], 1)
+            wl.set_wf(wl.WF_VAR['T_CTRL'], 0)
         drow_wf_menu() 
 
     elif call.data == "wf_update": 
@@ -435,9 +432,9 @@ def drow_wts_menu():
     wts_state = config.wts[wts_num]["STATE"]
 
     if wts_check == '1':       
-        if wts_state == 'OK':
+        if wts_state == wl.WL_STATE[0]:#'OK'
             button_onoff_text='✅'
-        elif wts_state == 'OFFLINE':
+        elif wts_state == wl.WL_STATE[4]:#'OFFLINE'
             button_onoff_text='🛑'#offline   
         else:
             button_onoff_text='⚠️\r\n'+ wts_state  
@@ -470,7 +467,7 @@ def drow_boiler_menu():
     temp = config.boiler[config.wf_blr_fieldnames[2]]
     set_temp = config.boiler[config.wf_blr_fieldnames[3]]
 
-    if state =='WL_OK':
+    if state == wl.WL_STATE[0]:#'OK'
         if temp_ctrl == '1':
             button_onoff_text = '✅'        
             header_str = 'Котёл '+ temp +'\t \t'+ '[ '+set_temp+'°C ]'
@@ -480,7 +477,7 @@ def drow_boiler_menu():
         else:
             button_onoff_text = '⚠️'             
             header_str = 'Котёл ' + '[ '+set_temp+'°C ]'
-    elif state =='WL_OFFLINE':
+    elif state ==wl.WL_STATE[4]:#'OFFLINE'
         button_onoff_text = '🛑'#offline  
         header_str = 'Котёл - нет связи' 
     else:
@@ -507,7 +504,7 @@ def drow_wf_menu():
     temp = config.wf[config.wf_blr_fieldnames[2]]
     set_temp = config.wf[config.wf_blr_fieldnames[3]]
 
-    if state =='WL_OK':
+    if state ==wl.WL_STATE[0]:#'OK'
         if temp_ctrl == '1':
             button_onoff_text = '✅'        
             header_str = 'ТП  '+ temp +'  '+ '[ '+set_temp+'°C ]'
@@ -517,7 +514,7 @@ def drow_wf_menu():
         else:
             button_onoff_text = '⚠️'             
             header_str = 'ТП  ' + '[ '+set_temp+'°C ]'
-    elif state =='WL_OFFLINE':
+    elif state ==wl.WL_STATE[4]:#'OFFLINE'
         button_onoff_text = '🛑'#offline  
         header_str = 'ТП - нет связи' 
     else:

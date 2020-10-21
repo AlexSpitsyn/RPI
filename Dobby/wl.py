@@ -50,8 +50,11 @@ def wl_rw(addr, cmd, var, val):
 
 	d=''
 	l=''
-	dbg_print ('wl_send addr:',hex(addr), 'cmd:', cmd, 'var:', var, 'val:', val)
 	
+	dbg_print ('Send Packet to:',hex(addr))
+	dbg_print ('CMD:', cmd)
+	dbg_print ('VAR:', var)
+	dbg_print ('VAL:', val)
 	
 
 	if EMULATION:
@@ -65,15 +68,30 @@ def wl_rw(addr, cmd, var, val):
 		
 		if LOG_SX1278:
 			l='-l'
-			
+		dbg_print ('Sending...')	
 		res = subprocess.run(["wl_send_cmd", str(hex(addr)), cmd,var, str(val), d, l],stdout=subprocess.PIPE, encoding='utf-8')	
 		wl_send_code=res.returncode
+		#========  return code 	=========	
+		# 0	ok
+		# 1	address fail
+		# 2	bad crc
+		# 3	error
+		# 4	offline	
+		# 101 addr not specified	
+		# 102 wrong TX ADDR
+		# 103 cmd not specified
+		# 104 wrong TX CMD
+		# 105 wrong TX VAR
+		# 106 wrong TX VAL
+		#=================================
+
 		wl_send_ret_str=res.stdout
 		
-	dbg_print ("WL PACK STATE: ",wl_send_code, ' / '+ WL_STATE[wl_send_code])
-
+	
 	if wl_send_code==0:#WL_OK
-		
+		dbg_print ("=====PACKET RECIEVED=====")
+		dbg_print ("WL PACK STATE: ",wl_send_code, ' / '+ WL_STATE[wl_send_code])
+
 		# ADDR;STATE;CMD;VAR;VAL;DESC:ERROR_CODE		
 		parts=wl_send_ret_str.split(';')
 		addr = parts[0]	
@@ -85,7 +103,7 @@ def wl_rw(addr, cmd, var, val):
 		dev_error_code = parts[6]
 		
 		
-		dbg_print('ADDR: ', addr)
+		dbg_print('ADDR: ', hex(int(addr)))
 		dbg_print('CMD STATE: ', WL_CMD_STATE[cmd_state])
 		dbg_print('CMD: ', cmd)
 		dbg_print('VAR: ', var)
@@ -96,7 +114,8 @@ def wl_rw(addr, cmd, var, val):
 		
 		return WL_STATE[wl_send_code], WL_CMD_STATE[cmd_state], dev_error_code, val
 	
-	else:		
+	else:
+		
 		return WL_STATE[wl_send_code],wl_send_ret_str,'0','0'
 
 
@@ -182,10 +201,10 @@ def send_to_wf(cmd, var, val):
 		if cmd_state=='DONE':
 			config.wf[list(WF_VAR.keys())[int(var)]]=str(retval)
 		else:
-			dbg_print('WARNING! ', cmd_state)
+			dbg_print(cmd_state)
 			config.wf[list(WF_VAR.keys())[int(var)]] = 'X'
 	else:
-		dbg_print('WARNING! ', wl_send_state)
+		dbg_print(wl_send_state)
 		config.wf[list(WF_VAR.keys())[int(var)]] = 'X'
 	
 	config.write_wf()
@@ -245,10 +264,10 @@ def send_to_boiler(cmd, var, val):
 		if cmd_state=='DONE':
 			config.boiler[list(BOILER_VAR.keys())[int(var)]]=str(retval)
 		else:
-			dbg_print('WARNING! ', cmd_state)
+			dbg_print(cmd_state)
 			config.boiler[list(BOILER_VAR.keys())[int(var)]] = 'X'
 	else:
-		dbg_print('WARNING! ', wl_send_state)
+		dbg_print(wl_send_state)
 		config.boiler[list(BOILER_VAR.keys())[int(var)]] = 'X'
 	
 	config.write_boiler()
@@ -258,7 +277,7 @@ def send_to_boiler(cmd, var, val):
 
 
 def get_boiler(var):	
-	return send_to_boiler(CMD['SET'], var, 0)	
+	return send_to_boiler(CMD['GET'], var, 0)	
 	
 
 def set_boiler(var, val):	

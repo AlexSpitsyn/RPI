@@ -113,11 +113,11 @@ int main(int argc, char** argv) {
 		
 		tx_addr = (int)strtol(argv[1], NULL, 0);
 		if(tx_addr==0){
-			if(dbg) fprintf(dbg_fp,  "Bad number: %s\r\n", argv[1]);
+			if(dbg) fprintf(dbg_fp,  "wrong TX ADDR: %s\r\n", argv[1]);
 			printf("Bad number: %s\r\n", argv[1]);
 			return 102;
 		}else{
-			if(dbg) fprintf(dbg_fp, "TX_ADDR = 0x%08X\n\r", tx_addr);
+			if(dbg) fprintf(dbg_fp, "TX ADDR = 0x%08X\n\r", tx_addr);
 		}		
 	}
 	//CMD
@@ -127,35 +127,37 @@ int main(int argc, char** argv) {
 		return 103;
 	}else{
 		if(sscanf(argv[2], "%d", &tx_cmd)!=1){
-			if(dbg) fprintf(dbg_fp, "Bad number: %s\r\n", argv[2]);
-			printf("Bad number: %s\r\n", argv[2]);
+			if(dbg) fprintf(dbg_fp, "wrong TX CMD: %s\r\n", argv[2]);
+			printf("wrong TX CMD: %s\r\n", argv[2]);
 			return 104;
 		}else{
-			if(dbg) fprintf(dbg_fp, "TX_CMD = %d\n\r", tx_cmd);
+			if(dbg) fprintf(dbg_fp, "TX CMD = %d\n\r", tx_cmd);
 		}
 	}
 	//VAR
 	if(argc<4){
-		if(dbg) fprintf(dbg_fp, "WARNING: var not specified. Default 0\r\n");	
+		if(dbg) fprintf(dbg_fp, "WARNING: var not specified. Default 0\r\n");
+		tx_var=0;
 	}else{
 		if(sscanf(argv[3], "%d", &tx_var)!=1){
-			fprintf(dbg_fp, "Bad number: %s\r\n", argv[3]);
-			printf("Bad number: %s\r\n", argv[3]);
+			fprintf(dbg_fp, "wrong TX VAR: %s\r\n", argv[3]);
+			printf("wrong TX VAR: %s\r\n", argv[3]);
 			return 105;
 		}else{
-			if(dbg) fprintf(dbg_fp, "TX_VAR = %d\n\r", tx_var);
+			if(dbg) fprintf(dbg_fp, "TX VAR = %d\n\r", tx_var);
 		}	
 	}
 	//VAL
 	if(argc<5){
-		if(dbg) fprintf(dbg_fp, "WARNING: val not specified. Default 0\r\n");		
+		if(dbg) fprintf(dbg_fp, "WARNING: val not specified. Default 0\r\n");
+		tx_val=0;
 	}else{
 		if(sscanf(argv[4], "%d", &tx_val)!=1){
-			fprintf(dbg_fp, "Bad number: %s\r\n", argv[4]);
-			printf("Bad number: %s\r\n", argv[4]);
+			fprintf(dbg_fp, "wrong TX VAL: %s\r\n", argv[4]);
+			printf("wrong TX VAL: %s\r\n", argv[4]);
 			return 106;
 		}else{
-			if(dbg) fprintf(dbg_fp, "TX_VAL = %d\n\r", tx_val);
+			if(dbg) fprintf(dbg_fp, "TX VAL = %d\n\r", tx_val);
 		}	
 	}
 	
