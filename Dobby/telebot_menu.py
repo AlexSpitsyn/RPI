@@ -1,15 +1,31 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-import telebot
-from telebot import apihelper, types, util
+#TODO
+# pip3 install pyTelegramBotApi
 
+
+import telebot
+#from telebot import apihelper, types, util
+from telebot import types, util
+from threading import Timer
 import wl
 import config
 
+UPDATE_TIME = 200# 30min
+
+def wl_update():
+    Timer(UPDATE_TIME, wl_update).start()
+    wl.update_wf()
+    wl.update_boiler()
+    wl.update_wts()
+    # wl.get_circ()
+    print('update wl')
+
+
 
 wl.DEBUG =True
-wl.EMULATION = False
+wl.EMULATION = True
 
 Alex_ID = 972228317
 
@@ -55,7 +71,10 @@ def inline_key(a):
     global set_dict
     global message_out_cnt
 
+
+
     if a.text == "/menu":
+        input_str_type = '0'
         mainmenu = types.InlineKeyboardMarkup()
         key1 = types.InlineKeyboardButton(text='Прочее', callback_data='other')
         key2 = types.InlineKeyboardButton(text='Парник', callback_data='parn')
@@ -71,8 +90,9 @@ def inline_key(a):
 
         
     if input_str_type == 'wts_name': 
-        input_str_type = '0'
+
         if(a.text[0]=='#'):
+            input_str_type = '0'
             message_out_cnt+=1
             wts_name = a.text.strip('#')
             config.wts[wts_num]["NAME"]=wts_name
@@ -86,8 +106,10 @@ def inline_key(a):
                 message_out_cnt-=1  
         else:
             bot.answer_callback_query(gcall.id, text="Неверно задано имя", show_alert=True)
-            message_out_cnt+=2
+            message_out_cnt+=1
 
+
+        print(message_out_cnt)
             
 
     elif input_str_type.split('@')[0] == 'temp':        
@@ -248,9 +270,13 @@ def callback_inline(call):
         tempinfo = "Данные датчиков:\r\n"
         for wts_conf in config.wts:
             if wts_conf["CHECK"] =='1':
-                wl.dbg_print()
-                tempinfo = tempinfo + 'Д' + wts_conf["WTSN"] +' - '+ wts_conf["NAME"] +': '+ wts_conf["TEMP"] + '\r\n'        
-        wl.dbg_print(tempinfo)
+                if wts_conf['STATE']=='OK':
+                    tempinfo = tempinfo + 'Д' + wts_conf["WTSN"] + ' - ' + wts_conf["NAME"] + ': ' + wts_conf[
+                        "TEMP"] + '\r\n'
+                else:
+                    tempinfo = tempinfo + 'Д' + wts_conf["WTSN"] + ' - ' + wts_conf["NAME"] + ': ' + wts_conf[
+                        "STATE"] + '\r\n'
+
         bot.send_message(call.message.chat.id,  tempinfo)   
         message_out_cnt+=1
         
@@ -420,7 +446,8 @@ def callback_inline(call):
         back_door_options_menu.row(key_back, key_home)
         bot.edit_message_text('Настр. задн. двери', call.message.chat.id, call.message.message_id,
                               reply_markup=boiler_options)
-
+wl_update()
+bot.polling()
 
 
 def drow_wts_menu():
@@ -579,23 +606,7 @@ def drow_circ_menu():
     else:
         button4_text = '⚠️'  
         
-  #  if c_main_state == '1':
-  #      button5_text = '✅'  
-  #  elif c_main_state == '0':        
-   #     button5_text = '🛑'   
-  #  else:
-  #      button5_text = '⚠️'  
-        
-  #  if c_hb_state == '1':
-  #      button6_text = '✅'  
-  #  elif c_hb_state == '0':        
-  #      button6_text = '🛑'   
-  #  else:
-  #      button6_text = '⚠️'  
-      
-    
-    
-    
+
     circulators_menu = types.InlineKeyboardMarkup()	
     #key1 = types.InlineKeyboardButton(text=button5_text + '    ДОМ', callback_data='circ_toggle@CIRC_MAIN')
     #key2 = types.InlineKeyboardButton(text=button6_text + '    ХБ', callback_data='circ_toggle@CIRC_HB')
@@ -616,5 +627,10 @@ def drow_circ_menu():
     
     markup = circulators_menu
     message_out=bot.edit_message_text('Насосы', gcall.message.chat.id, gcall.message.message_id, reply_markup=markup)
-    
-bot.polling()
+
+
+
+
+
+
+

@@ -61,7 +61,8 @@ def wl_rw(addr, cmd, var, val):
 		dbg_print ('Warning!!! Emulation mode')
 		dbg_print ("wl_send_cmd", hex(addr), cmd,var, val)
 		wl_send_code=0#WL_OK
-		wl_send_ret_str="12345678;0;0;0;test;0"
+		# ADDR;STATE;CMD;VAR;VAL;DESC;ERROR_CODE
+		wl_send_ret_str= str(addr)+';'+'0'+';'+cmd+';'+var+';'+str(val)+';'+'test;0'
 	else:
 		if DEBUG_SX1278:
 			d='-d'
@@ -92,7 +93,7 @@ def wl_rw(addr, cmd, var, val):
 		dbg_print ("=====PACKET RECIEVED=====")
 		dbg_print ("WL PACK STATE: ",wl_send_code, ' / '+ WL_STATE[wl_send_code])
 
-		# ADDR;STATE;CMD;VAR;VAL;DESC:ERROR_CODE		
+		# ADDR;STATE;CMD;VAR;VAL;DESC;ERROR_CODE
 		parts=wl_send_ret_str.split(';')
 		addr = parts[0]	
 		cmd_state = int(parts[1])
@@ -171,9 +172,9 @@ def update_wts():
 	for wts_conf in config.wts:
 		if wts_conf["CHECK"] =='1':			
 			res = read_wts(int(wts_conf["WTSN"]))
-			wl.dbg_print('Read WTS' + wts_conf["WTSN"]+':'+ res)
+			dbg_print('Read WTS' + wts_conf["WTSN"]+':'+ res)
 
-#=====================  WF ================ ====== =======
+#=====================  WF ===============================
 #STATE / T_CTRL / TEMP / TEMP_SET
 WF_VAR = {
 	'TEMP':'0',
@@ -333,7 +334,7 @@ def get_circ():
 		config.circ[circ_fieldnames[0]]='X'
 	
 	
-	config.write_boiler()		
+	config.write_circ()
 		
 		
 	return cmd_state
