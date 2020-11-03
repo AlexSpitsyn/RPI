@@ -53,6 +53,10 @@ def create_cfg_files(filename):
 
     if filename==FILENAME_CIRC_CONF:
         circ = dict.fromkeys(circ_fieldnames)
+        circ[circ_fieldnames[0]]='0'
+        circ[circ_fieldnames[1]] = '0'
+        circ[circ_fieldnames[2]] = '0'
+        circ[circ_fieldnames[3]] = '0'
         with open(FILENAME_CIRC_CONF, 'w') as outfile:
             json.dump(circ, outfile)
 

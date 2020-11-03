@@ -14,7 +14,7 @@ import config
 
 UPDATE_TIME = 200# 30min
 wl.DEBUG =True
-wl.EMULATION = True
+wl.EMULATION = False
 
 Alex_ID = 972228317
 
