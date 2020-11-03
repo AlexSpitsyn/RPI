@@ -321,7 +321,7 @@ def get_circ():
 			config.circ[config.circ_fieldnames[2]] = bit_str[l - 2]
 			config.circ[config.circ_fieldnames[1]] = bit_str[l - 3]
 			config.circ[config.circ_fieldnames[0]] = bit_str[l - 4]
-	else:
+		else:
 			dbg_print('WARNING! ', cmd_state)
 			config.circ[config.circ_fieldnames[3]]='X'
 			config.circ[config.circ_fieldnames[2]]='X'
