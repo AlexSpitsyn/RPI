@@ -304,7 +304,7 @@ def toggle_boiler():
 #=====================  CIRC ===================== ========	
 #CIRC1_1 / CIRC1_2 / CIRC2_1 / CIRC2_2 
 def get_circ():	
-	wl_send_state, cmd_state, dev_error_code, retval = wl_rw(config.wfcr_addr, CMD['GET'], var, 0)
+	wl_send_state, cmd_state, dev_error_code, retval = wl_rw(config.wfcr_addr, CMD['GET'], WF_VAR['pump'], 0)
 	
 	
 		
@@ -314,24 +314,25 @@ def get_circ():
 			
 	if wl_send_state==WL_STATE[0]:#OK			 
 		if cmd_state=='DONE':
-			bit_str=str(bin(int(retval)))		
+			bit_str = format(int(retval), 'b')
+			l = len(bit_str)
 			dbg_print('CIRC RETURN VAL: ' + bit_str)
-			config.circ[circ_fieldnames[3]]=bit_str[-5]
-			config.circ[circ_fieldnames[2]]=bit_str[-6]
-			config.circ[circ_fieldnames[1]]=bit_str[-7]
-			config.circ[circ_fieldnames[0]]=bit_str[-8]	
-		else:
+			config.circ[config.circ_fieldnames[3]] = bit_str[l - 1]
+			config.circ[config.circ_fieldnames[2]] = bit_str[l - 2]
+			config.circ[config.circ_fieldnames[1]] = bit_str[l - 3]
+			config.circ[config.circ_fieldnames[0]] = bit_str[l - 4]
+	else:
 			dbg_print('WARNING! ', cmd_state)
-			config.circ[circ_fieldnames[3]]='X'
-			config.circ[circ_fieldnames[2]]='X'
-			config.circ[circ_fieldnames[1]]='X'
-			config.circ[circ_fieldnames[0]]='X'
+			config.circ[config.circ_fieldnames[3]]='X'
+			config.circ[config.circ_fieldnames[2]]='X'
+			config.circ[config.circ_fieldnames[1]]='X'
+			config.circ[config.circ_fieldnames[0]]='X'
 	else:
 		dbg_print('WARNING! ', wl_send_state)
-		config.circ[circ_fieldnames[3]]='X'
-		config.circ[circ_fieldnames[2]]='X'
-		config.circ[circ_fieldnames[1]]='X'
-		config.circ[circ_fieldnames[0]]='X'
+		config.circ[config.circ_fieldnames[3]]='X'
+		config.circ[config.circ_fieldnames[2]]='X'
+		config.circ[config.circ_fieldnames[1]]='X'
+		config.circ[config.circ_fieldnames[0]]='X'
 	
 	
 	config.write_circ()

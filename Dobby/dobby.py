@@ -13,23 +13,208 @@ import wl
 import config
 
 UPDATE_TIME = 200# 30min
-
-def wl_update():
-    Timer(UPDATE_TIME, wl_update).start()
-    wl.update_wf()
-    wl.update_boiler()
-    wl.update_wts()
-    # wl.get_circ()
-    print('update wl')
-
-
-
 wl.DEBUG =True
 wl.EMULATION = True
 
 Alex_ID = 972228317
 
 TOKEN = '927942451:AAG7HMnzpyLVKcydJiEW0zGjOcnqi7_1EDE'
+
+def wl_update():
+    Timer(UPDATE_TIME, wl_update).start()
+    wl.update_wf()
+    wl.update_boiler()
+    wl.update_wts()
+    wl.get_circ()
+    print('update wl')
+
+
+def drow_wts_menu():
+    global gcall
+    global wts_num
+    wts_check = config.wts[wts_num]["CHECK"]
+    wts_name = config.wts[wts_num]["NAME"]
+    wts_temp = config.wts[wts_num]["TEMP"]
+    wts_state = config.wts[wts_num]["STATE"]
+
+    if wts_check == '1':
+        if wts_state == wl.WL_STATE[0]:  # 'OK'
+            button_onoff_text = '✅'
+        elif wts_state == wl.WL_STATE[4]:  # 'OFFLINE'
+            button_onoff_text = '🛑'  # offline
+        else:
+            button_onoff_text = '⚠️\r\n' + wts_state
+
+        header_str = 'Д' + str(wts_num + 1) + '  ' + wts_name + '  ' + wts_temp + '°C'
+
+    else:
+        button_onoff_text = '⏹'  # not checked
+        header_str = 'Д' + str(wts_num + 1) + '  ' + wts_name + '- OFF'
+
+    wts_options_menu = types.InlineKeyboardMarkup()
+    key1 = types.InlineKeyboardButton(text=button_onoff_text, callback_data='wts_onoff')
+    key2 = types.InlineKeyboardButton(text='Имя', callback_data='set_wts_name')
+    key3 = types.InlineKeyboardButton(text='🔄', callback_data='wts_update')
+
+    key_back.callback_data = 'wts_select'
+    wts_options_menu.add(key1, key2, key3)
+    wts_options_menu.row(key_back, key_home)
+
+    markup = wts_options_menu
+
+    if gcall.message.text != header_str or gcall.message.json['reply_markup']['inline_keyboard'][0][0][
+        'text'] != button_onoff_text:
+        message_out = bot.edit_message_text(header_str, gcall.message.chat.id, gcall.message.message_id,
+                                            reply_markup=markup)
+
+
+def drow_boiler_menu():
+    global gcall
+
+    state = config.boiler[config.wf_blr_fieldnames[0]]
+    temp_ctrl = config.boiler[config.wf_blr_fieldnames[1]]
+    temp = config.boiler[config.wf_blr_fieldnames[2]]
+    set_temp = config.boiler[config.wf_blr_fieldnames[3]]
+
+    if state == wl.WL_STATE[0]:  # 'OK'
+        if temp_ctrl == '1':
+            button_onoff_text = '✅'
+            header_str = 'Котёл ' + temp + '\t \t' + '[ ' + set_temp + '°C ]'
+        elif temp_ctrl == '0':
+            button_onoff_text = '⏹'
+            header_str = 'Котёл ' + temp + '\t \t' + '[ ' + set_temp + '°C ]'
+        else:
+            button_onoff_text = '⚠️'
+            header_str = 'Котёл ' + '[ ' + set_temp + '°C ]'
+    elif state == wl.WL_STATE[4]:  # 'OFFLINE'
+        button_onoff_text = '🛑'  # offline
+        header_str = 'Котёл - нет связи'
+    else:
+        button_onoff_text = '⚠️'
+        header_str = 'Котёл - error ' + state
+
+    boiler_options_menu = types.InlineKeyboardMarkup()
+    key1 = types.InlineKeyboardButton(text=button_onoff_text, callback_data='boiler_onoff')
+    key2 = types.InlineKeyboardButton(text='Уст.темп', callback_data='set_temp@boiler')
+    key3 = types.InlineKeyboardButton(text='🔄', callback_data='boiler_update')
+    key_back.callback_data = 'heat_select'
+
+    boiler_options_menu.add(key1, key2, key3)
+    boiler_options_menu.row(key_back, key_home)
+    markup = boiler_options_menu
+    if gcall.message.text != header_str or gcall.message.json['reply_markup']['inline_keyboard'][0][0][
+        'text'] != button_onoff_text:
+        message_out = bot.edit_message_text(header_str, gcall.message.chat.id, gcall.message.message_id,
+                                            reply_markup=markup)
+
+
+def drow_wf_menu():
+    global gcall
+
+    state = config.wf[config.wf_blr_fieldnames[0]]
+    temp_ctrl = config.wf[config.wf_blr_fieldnames[1]]
+    temp = config.wf[config.wf_blr_fieldnames[2]]
+    set_temp = config.wf[config.wf_blr_fieldnames[3]]
+
+    if state == wl.WL_STATE[0]:  # 'OK'
+        if temp_ctrl == '1':
+            button_onoff_text = '✅'
+            header_str = 'ТП  ' + temp + '  ' + '[ ' + set_temp + '°C ]'
+        elif temp_ctrl == '0':
+            button_onoff_text = '⏹'
+            header_str = 'ТП  ' + temp + '  ' + '[ ' + set_temp + '°C ]'
+        else:
+            button_onoff_text = '⚠️'
+            header_str = 'ТП  ' + '[ ' + set_temp + '°C ]'
+    elif state == wl.WL_STATE[4]:  # 'OFFLINE'
+        button_onoff_text = '🛑'  # offline
+        header_str = 'ТП - нет связи'
+    else:
+        button_onoff_text = '⚠️'
+        header_str = 'ТП - error ' + state
+
+    wf_options_menu = types.InlineKeyboardMarkup()
+    key1 = types.InlineKeyboardButton(text=button_onoff_text, callback_data='wf_onoff')
+    key2 = types.InlineKeyboardButton(text='Уст.темп', callback_data='set_temp@wf')
+    key3 = types.InlineKeyboardButton(text='🔄', callback_data='wf_update')
+    key_back.callback_data = 'heat_select'
+
+    wf_options_menu.add(key1, key2, key3)
+    wf_options_menu.row(key_back, key_home)
+    markup = wf_options_menu
+
+    if gcall.message.text != header_str or gcall.message.json['reply_markup']['inline_keyboard'][0][0][
+        'text'] != button_onoff_text:
+        #    header_str = header_str + '-'
+        message_out = bot.edit_message_text(header_str, gcall.message.chat.id, gcall.message.message_id,
+                                            reply_markup=markup)
+
+
+def drow_circ_menu():
+    global gcall
+
+    c1_1_state = config.circ[config.circ_fieldnames[0]]
+    c1_2_state = config.circ[config.circ_fieldnames[1]]
+    c2_1_state = config.circ[config.circ_fieldnames[2]]
+    c2_2_state = config.circ[config.circ_fieldnames[3]]
+    # c_main_state = config.circ[config.circ_fieldnames[0]]
+    # c_hb_state = config.circ[config.circ_fieldnames[1]]
+
+    # print(gcall.message.json['reply_markup']['inline_keyboard'][0][0]['text'])
+    # print(gcall.message.json['reply_markup']['inline_keyboard'][1][0]['text'])
+    # print(gcall.message.json['reply_markup']['inline_keyboard'][2][0]['text'])
+    # print(gcall.message.json['reply_markup']['inline_keyboard'][3][0]['text'])
+    if c1_1_state == '1':
+        button1_text = '✅'
+    elif c1_1_state == '0':
+        button1_text = '🛑'
+    else:
+        button1_text = '⚠️'
+
+    if c1_2_state == '1':
+        button2_text = '✅'
+    elif c1_2_state == '0':
+        button2_text = '🛑'
+    else:
+        button2_text = '⚠️'
+
+    if c2_1_state == '1':
+        button3_text = '✅'
+    elif c2_1_state == '0':
+        button3_text = '🛑'
+    else:
+        button3_text = '⚠️'
+
+    if c2_2_state == '1':
+        button4_text = '✅'
+    elif c2_2_state == '0':
+        button4_text = '🛑'
+    else:
+        button4_text = '⚠️'
+
+    circulators_menu = types.InlineKeyboardMarkup()
+    # key1 = types.InlineKeyboardButton(text=button5_text + '    ДОМ', callback_data='circ_toggle@CIRC_MAIN')
+    # key2 = types.InlineKeyboardButton(text=button6_text + '    ХБ', callback_data='circ_toggle@CIRC_HB')
+    key3 = types.InlineKeyboardButton(text=button1_text + '  Кухня-гост', callback_data='circ_toggle@CIRC1_1')
+    key4 = types.InlineKeyboardButton(text=button2_text + '  Прихожая-сп.гост', callback_data='circ_toggle@CIRC1_2')
+    key5 = types.InlineKeyboardButton(text=button3_text + '  Спальная 2.1 -2.2.', callback_data='circ_toggle@CIRC2_1')
+    key6 = types.InlineKeyboardButton(text=button4_text + '  Спальная 2.3 -2.4.', callback_data='circ_toggle@CIRC2_2')
+
+    key_back.callback_data = 'heat_select'
+    # circulators_menu.row(key1)
+    # circulators_menu.row(key2)
+    circulators_menu.row(key3)
+    circulators_menu.row(key4)
+    circulators_menu.row(key5)
+    circulators_menu.row(key6)
+    circulators_menu.row(key_back, key_home)
+
+    markup = circulators_menu
+    message_out = bot.edit_message_text('Насосы', gcall.message.chat.id, gcall.message.message_id, reply_markup=markup)
+
+
+
+
 
 bot = telebot.TeleBot(TOKEN)
 bot.send_message(Alex_ID, "привет")
@@ -359,12 +544,13 @@ def callback_inline(call):
     elif call.data == "wf_options":        
         drow_wf_menu()
         
-    elif call.data == "wf_onoff": 
-        if config.wf['T_CTRL']=='0':
-            wl.set_wf(wl.WF_VAR['T_CTRL'], 1)
-        elif config.wf['T_CTRL']=='1':
-            wl.set_wf(wl.WF_VAR['T_CTRL'], 0)
-        drow_wf_menu() 
+    elif call.data == "wf_onoff":
+        if config.wf['STATE']== wl.WL_STATE[0]:  # 'OK':
+            if config.wf['T_CTRL']=='0':
+                wl.set_wf(wl.WF_VAR['T_CTRL'], 1)
+            elif config.wf['T_CTRL']=='1':
+                wl.set_wf(wl.WF_VAR['T_CTRL'], 0)
+            drow_wf_menu()
 
     elif call.data == "wf_update": 
         wl.update_wf()
@@ -448,185 +634,6 @@ def callback_inline(call):
                               reply_markup=boiler_options)
 wl_update()
 bot.polling()
-
-
-def drow_wts_menu():
-    global gcall
-    global wts_num 
-    wts_check = config.wts[wts_num]["CHECK"]    
-    wts_name = config.wts[wts_num]["NAME"]
-    wts_temp = config.wts[wts_num]["TEMP"]
-    wts_state = config.wts[wts_num]["STATE"]
-
-    if wts_check == '1':       
-        if wts_state == wl.WL_STATE[0]:#'OK'
-            button_onoff_text='✅'
-        elif wts_state == wl.WL_STATE[4]:#'OFFLINE'
-            button_onoff_text='🛑'#offline   
-        else:
-            button_onoff_text='⚠️\r\n'+ wts_state  
-
-        header_str = 'Д'+ str(wts_num+1) +'  '+  wts_name +'  ' + wts_temp +'°C' 
-       
-    else:        
-        button_onoff_text='⏹'#not checked  
-        header_str = 'Д'+ str(wts_num+1) +'  '+ wts_name + '- OFF'    
-    
-    wts_options_menu = types.InlineKeyboardMarkup() 
-    key1 = types.InlineKeyboardButton(text=button_onoff_text, callback_data='wts_onoff')
-    key2 = types.InlineKeyboardButton(text='Имя', callback_data='set_wts_name')
-    key3 = types.InlineKeyboardButton(text='🔄', callback_data='wts_update')
-    
-    key_back.callback_data='wts_select'
-    wts_options_menu.add(key1, key2, key3)
-    wts_options_menu.row(key_back, key_home)
-
-    markup = wts_options_menu
-   
-    if gcall.message.text != header_str or gcall.message.json['reply_markup']['inline_keyboard'][0][0]['text'] != button_onoff_text:
-        message_out=bot.edit_message_text(header_str, gcall.message.chat.id, gcall.message.message_id, reply_markup=markup)
-
-def drow_boiler_menu():
-    global gcall       
-
-    state = config.boiler[config.wf_blr_fieldnames[0]]
-    temp_ctrl = config.boiler[config.wf_blr_fieldnames[1]]
-    temp = config.boiler[config.wf_blr_fieldnames[2]]
-    set_temp = config.boiler[config.wf_blr_fieldnames[3]]
-
-    if state == wl.WL_STATE[0]:#'OK'
-        if temp_ctrl == '1':
-            button_onoff_text = '✅'        
-            header_str = 'Котёл '+ temp +'\t \t'+ '[ '+set_temp+'°C ]'
-        elif temp_ctrl == '0':        
-            button_onoff_text = '⏹'                
-            header_str = 'Котёл '+ temp +'\t \t'+ '[ '+set_temp+'°C ]' 
-        else:
-            button_onoff_text = '⚠️'             
-            header_str = 'Котёл ' + '[ '+set_temp+'°C ]'
-    elif state ==wl.WL_STATE[4]:#'OFFLINE'
-        button_onoff_text = '🛑'#offline  
-        header_str = 'Котёл - нет связи' 
-    else:
-        button_onoff_text = '⚠️'
-        header_str = 'Котёл - error '+ state    
-        
-    boiler_options_menu = types.InlineKeyboardMarkup() 
-    key1 = types.InlineKeyboardButton(text=button_onoff_text, callback_data='boiler_onoff')
-    key2 = types.InlineKeyboardButton(text='Уст.темп', callback_data='set_temp@boiler')
-    key3 = types.InlineKeyboardButton(text='🔄', callback_data='boiler_update')
-    key_back.callback_data='heat_select'    
-    
-    boiler_options_menu.add(key1, key2, key3)
-    boiler_options_menu.row(key_back, key_home)
-    markup = boiler_options_menu
-    if gcall.message.text != header_str or gcall.message.json['reply_markup']['inline_keyboard'][0][0]['text'] != button_onoff_text:
-        message_out=bot.edit_message_text(header_str, gcall.message.chat.id, gcall.message.message_id,
-                         reply_markup=markup)
-def drow_wf_menu():
-    global gcall   
-    
-    state = config.wf[config.wf_blr_fieldnames[0]]
-    temp_ctrl = config.wf[config.wf_blr_fieldnames[1]]
-    temp = config.wf[config.wf_blr_fieldnames[2]]
-    set_temp = config.wf[config.wf_blr_fieldnames[3]]
-
-    if state ==wl.WL_STATE[0]:#'OK'
-        if temp_ctrl == '1':
-            button_onoff_text = '✅'        
-            header_str = 'ТП  '+ temp +'  '+ '[ '+set_temp+'°C ]'
-        elif temp_ctrl == '0':        
-            button_onoff_text = '⏹'                
-            header_str = 'ТП  '+ temp +'  '+ '[ '+set_temp+'°C ]' 
-        else:
-            button_onoff_text = '⚠️'             
-            header_str = 'ТП  ' + '[ '+set_temp+'°C ]'
-    elif state ==wl.WL_STATE[4]:#'OFFLINE'
-        button_onoff_text = '🛑'#offline  
-        header_str = 'ТП - нет связи' 
-    else:
-        button_onoff_text = '⚠️'
-        header_str = 'ТП - error '+ state   
-        
-    wf_options_menu = types.InlineKeyboardMarkup() 
-    key1 = types.InlineKeyboardButton(text=button_onoff_text, callback_data='wf_onoff')
-    key2 = types.InlineKeyboardButton(text='Уст.темп', callback_data='set_temp@wf')
-    key3 = types.InlineKeyboardButton(text='🔄', callback_data='wf_update')    
-    key_back.callback_data='heat_select'
-    
-    wf_options_menu.add(key1, key2, key3)
-    wf_options_menu.row(key_back, key_home)
-    markup = wf_options_menu    
-      
-     
-    if gcall.message.text != header_str or gcall.message.json['reply_markup']['inline_keyboard'][0][0]['text'] != button_onoff_text:
-    #    header_str = header_str + '-'
-        message_out=bot.edit_message_text(header_str, gcall.message.chat.id, gcall.message.message_id, reply_markup=markup)
-    
-    
-def drow_circ_menu():
-    global gcall   
-
-    c1_1_state = config.circ[config.circ_fieldnames[0]]
-    c1_2_state = config.circ[config.circ_fieldnames[1]]
-    c2_1_state = config.circ[config.circ_fieldnames[2]]
-    c2_2_state = config.circ[config.circ_fieldnames[3]]
-   # c_main_state = config.circ[config.circ_fieldnames[0]]
-   # c_hb_state = config.circ[config.circ_fieldnames[1]]
-    
-   # print(gcall.message.json['reply_markup']['inline_keyboard'][0][0]['text'])
-   # print(gcall.message.json['reply_markup']['inline_keyboard'][1][0]['text'])
-   # print(gcall.message.json['reply_markup']['inline_keyboard'][2][0]['text'])
-   # print(gcall.message.json['reply_markup']['inline_keyboard'][3][0]['text'])
-    if c1_1_state == '1':
-        button1_text = '✅'  
-    elif c1_1_state == '0':        
-        button1_text = '🛑'   
-    else:
-        button1_text = '⚠️'   
-    
-    if c1_2_state == '1':
-        button2_text = '✅'  
-    elif c1_2_state == '0':        
-        button2_text = '🛑'   
-    else:
-        button2_text = '⚠️' 
-    
-    if c2_1_state == '1':
-        button3_text = '✅'  
-    elif c2_1_state == '0':        
-        button3_text = '🛑'   
-    else:
-        button3_text = '⚠️'  
-
-    if c2_2_state == '1':
-        button4_text = '✅'  
-    elif c2_2_state == '0':        
-        button4_text = '🛑'   
-    else:
-        button4_text = '⚠️'  
-        
-
-    circulators_menu = types.InlineKeyboardMarkup()	
-    #key1 = types.InlineKeyboardButton(text=button5_text + '    ДОМ', callback_data='circ_toggle@CIRC_MAIN')
-    #key2 = types.InlineKeyboardButton(text=button6_text + '    ХБ', callback_data='circ_toggle@CIRC_HB')
-    key3 = types.InlineKeyboardButton(text=button1_text + '  Кухня-гост', callback_data='circ_toggle@CIRC1_1')
-    key4 = types.InlineKeyboardButton(text=button2_text + '  Прихожая-сп.гост', callback_data='circ_toggle@CIRC1_2')
-    key5 = types.InlineKeyboardButton(text=button3_text + '  Спальная 2.1 -2.2.', callback_data='circ_toggle@CIRC2_1')
-    key6 = types.InlineKeyboardButton(text=button4_text + '  Спальная 2.3 -2.4.', callback_data='circ_toggle@CIRC2_2')
-    
-   
-    key_back.callback_data='heat_select'        
-    #circulators_menu.row(key1)
-    #circulators_menu.row(key2)
-    circulators_menu.row(key3)
-    circulators_menu.row(key4)
-    circulators_menu.row(key5)
-    circulators_menu.row(key6)
-    circulators_menu.row(key_back, key_home)
-    
-    markup = circulators_menu
-    message_out=bot.edit_message_text('Насосы', gcall.message.chat.id, gcall.message.message_id, reply_markup=markup)
 
 
 
