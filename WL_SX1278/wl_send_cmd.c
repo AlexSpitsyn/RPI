@@ -187,7 +187,6 @@ int main(int argc, char** argv) {
 	convert_pack_to_data(txbuf, &tx_pack);
 	
 	
-	uint8_t send_cnt=0;
     
     modem.spiCS = 0;//Raspberry SPI CE pin number
     modem.tx.callback = tx_f;
@@ -220,105 +219,93 @@ int main(int argc, char** argv) {
 
 	if(loging) sprintf(log_str, "%d\t0x%08X\t%s\t%d\t%d", tx_pack.pack_ID, tx_pack.dest_addr, CMD_STR[tx_pack.cmd], tx_pack.var, tx_pack.val);			
 			
-	while(send_cnt<3){
-		LoRa_send(&modem);
-		time(&send_time);
-		if(dbg) fprintf(dbg_fp, "\n\rSent to %08X\n\rTry: %d\n\r", tx_addr, send_cnt+1);
-		if(dbg) fprintf(dbg_fp, "Start listening...\n\r");
-				
-		data_received=0;
-		  
-		while(difftime(send_timeout,send_time)<5 ){
-						
-			if (data_received) {				
-				data_received=0;
-				if(dbg){
-					fprintf(dbg_fp,  "Data: [");
-					for (uint8_t i = 0; i < PLOAD_WIDTH; ++i) {
-						if (i == 0) {
-						  fprintf(dbg_fp, "%02X", rxbuf[i]);
-						} else {
-						  fprintf(dbg_fp, ", %02X", rxbuf[i]);
-						}
-					}   
-					fprintf(dbg_fp,  "]");
-				}
-
-				convert_data_to_pack(rxbuf, &rx_pack);				
-				if(dbg){
-					fprintf(dbg_fp, "\n\rRX PACKET:\n\r");
-					print_packet(&rx_pack, dbg_fp);
-				}
-				CRC = Crc32(rxbuf,PLOAD_WIDTH-4);			
-					
-				if(CRC!=rx_pack.crc){		
-					if(dbg) fprintf(dbg_fp, "CRC: BAD\n\r");				
-					if(send_cnt==3){
-						if(loging){
-							strcat(log_str, "\t\t\tCRC BAD");
-							print_log(log_str);
-						}
-						printf("CRC BAD\r\n");
-						return WL_CRC_BAD;
-					}
-					send_cnt++;
-					//delay(3000);
-							
-				}else{
-					
-					if(rx_pack.src_addr!=tx_pack.dest_addr | rx_pack.dest_addr!=WL_ADDR.Val){		
-						if(dbg) fprintf(dbg_fp, "WRONG ADDR\n\r");
-						if(send_cnt==3){
-							if(loging){
-								strcat(log_str, "\t\t\tWRONG ADDR");
-								print_log(log_str);
-							}
-							printf("ADDRESS MISMATCH\r\n");
-							return WL_ADDRESS_FAIL;
-					}
-					send_cnt++;
-					//delay(3000);
-							
-					}else{
-					
-						if(dbg){
-							fprintf(dbg_fp, "CRC: OK\r\n" );
-							fprintf(dbg_fp, "ADDR PASS\n\r");	
-							fprintf(dbg_fp, "Pack cmd state: %s\r\n", CMD_STATE_STR[rx_pack.state]);
-													
-							fprintf(dbg_fp, "ADDR;STATE;CMD;VAR;VAL;DESC:ERROR_CODE\r\n");
-							fprintf(dbg_fp, "%d;%d;%d;%d;%d;%s;%d",rx_pack.src_addr, rx_pack.state, rx_pack.cmd, rx_pack.var, rx_pack.val, rx_pack.desc, rx_pack.dev_error_code);
-							
-						}
-							
-						
-												
-						if(loging){
-							sprintf(tmp_str,"\t-\t%s\t%d\t%s\t%d", CMD_STATE_STR[rx_pack.state], rx_pack.val, rx_pack.desc,rx_pack.dev_error_code);
-							strcat(log_str, tmp_str);
-							print_log(log_str);
-						}	
-						if(rx_pack.state == CMD_DONE){	
-							printf("%d;%d;%d;%d;%d;%s;%d",rx_pack.src_addr, rx_pack.state, rx_pack.cmd, rx_pack.var, rx_pack.val, rx_pack.desc, rx_pack.dev_error_code);							
-							return WL_OK;
-						}else{
-							printf("ERROER! PACK STATE: %s\r\n", CMD_STATE_STR[rx_pack.state]);	
-							return WL_ERROR;
-						}
-					}
-					
-				}	
-			}
-			sleep(1);
-			time(&send_timeout);
-		}				
-		
-		if(dbg) fprintf(dbg_fp, "====Data NOT Recieved====\n\r");
-		send_cnt++;
+	
+	LoRa_send(&modem);
+	time(&send_time);
+	if(dbg) fprintf(dbg_fp, "\n\rSent to %08X\n\r", tx_addr);
+	if(dbg) fprintf(dbg_fp, "Start listening...\n\r");
 			
+	data_received=0;
+	  
+	while(difftime(send_timeout,send_time)<5 ){
+					
+		if (data_received) {				
+			data_received=0;
+			if(dbg){
+				fprintf(dbg_fp,  "Data: [");
+				for (uint8_t i = 0; i < PLOAD_WIDTH; ++i) {
+					if (i == 0) {
+					  fprintf(dbg_fp, "%02X", rxbuf[i]);
+					} else {
+					  fprintf(dbg_fp, ", %02X", rxbuf[i]);
+					}
+				}   
+				fprintf(dbg_fp,  "]");
+			}
+
+			convert_data_to_pack(rxbuf, &rx_pack);				
+			if(dbg){
+				fprintf(dbg_fp, "\n\rRX PACKET:\n\r");
+				print_packet(&rx_pack, dbg_fp);
+			}
+			CRC = Crc32(rxbuf,PLOAD_WIDTH-4);			
+				
+			if(CRC!=rx_pack.crc){		
+				if(dbg) fprintf(dbg_fp, "CRC: BAD\n\r");				
+				
+				if(loging){
+					strcat(log_str, "\t\t\tCRC BAD");
+					print_log(log_str);
+				}
+				printf("CRC BAD\r\n");
+				return WL_CRC_BAD;						
+			}else{				
+				if(rx_pack.src_addr!=tx_pack.dest_addr | rx_pack.dest_addr!=WL_ADDR.Val){		
+					if(dbg) fprintf(dbg_fp, "WRONG ADDR\n\r");					
+					if(loging){
+						strcat(log_str, "\t\t\tWRONG ADDR");
+						print_log(log_str);
+					}
+					printf("ADDRESS MISMATCH\r\n");
+					return WL_ADDRESS_FAIL;
+													
+				}else{
+				
+					if(dbg){
+						fprintf(dbg_fp, "CRC: OK\r\n" );
+						fprintf(dbg_fp, "ADDR PASS\n\r");	
+						fprintf(dbg_fp, "Pack cmd state: %s\r\n", CMD_STATE_STR[rx_pack.state]);
+												
+						fprintf(dbg_fp, "ADDR;STATE;CMD;VAR;VAL;DESC:ERROR_CODE\r\n");
+						fprintf(dbg_fp, "%d;%d;%d;%d;%d;%s;%d",rx_pack.src_addr, rx_pack.state, rx_pack.cmd, rx_pack.var, rx_pack.val, rx_pack.desc, rx_pack.dev_error_code);
+						
+					}
+						
+					
+											
+					if(loging){
+						sprintf(tmp_str,"\t-\t%s\t%d\t%s\t%d", CMD_STATE_STR[rx_pack.state], rx_pack.val, rx_pack.desc,rx_pack.dev_error_code);
+						strcat(log_str, tmp_str);
+						print_log(log_str);
+					}	
+					if(rx_pack.state == CMD_DONE){	
+						printf("%d;%d;%d;%d;%d;%s;%d",rx_pack.src_addr, rx_pack.state, rx_pack.cmd, rx_pack.var, rx_pack.val, rx_pack.desc, rx_pack.dev_error_code);							
+						return WL_OK;
+					}else{
+						printf("ERROER! PACK STATE: %s\r\n", CMD_STATE_STR[rx_pack.state]);	
+						return WL_ERROR;
+					}
+				}
+				
+			}	
+		}
+		sleep(1);
+		time(&send_timeout);
+	}				
+	
+	if(dbg) fprintf(dbg_fp, "====Data NOT Recieved====\n\r");		
 		
-		
-	}    
+	  
 	if(loging){			
 		strcat(log_str, "\t\t\tData NOT Recieved");
 		print_log(log_str);
