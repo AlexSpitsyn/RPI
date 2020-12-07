@@ -7,10 +7,12 @@
 import json
 import os
 
-FILENAME_WTS_CONF = "wts.cfg"
-FILENAME_BOILER_CONF = "boiler.cfg"
-FILENAME_WF_CONF = "wf.cfg"
-FILENAME_CIRC_CONF = "circ.cfg"
+CONFIG_PATH = "config/"
+FILENAME_WTS_CONF = CONFIG_PATH + "wts.cfg"
+FILENAME_BOILER_CONF = CONFIG_PATH+ "boiler.cfg"
+FILENAME_WF_CONF = CONFIG_PATH + "wf.cfg"
+FILENAME_CIRC_CONF = CONFIG_PATH+ "circ.cfg"
+FILENAME_DOBBY_CONF = CONFIG_PATH+ "dobby.cfg"
 
 wts_addr = [0x53545701, 0x54545701, 0x55545701, 0x56545701, 0x57545701, 0x58545701, 0x59545701, 0x5A545701, 0x5B545701,
             0x5C545701, 0x5D545701, 0x5E545701, 0x5F545701, 0x60545701, 0x61545701, 0x62545701]
@@ -18,14 +20,15 @@ wfcr_addr = 0x52434657
 boiler_addr = 0x524C4F42
 
 wts_fieldnames = ['WTSN', 'STATE', 'TEMP', 'NAME', 'CHECK']
-wf_blr_fieldnames = ['STATE', 'T_CTRL', 'TEMP', 'TEMP_SET']  # numeration must be like in wl.py WF_VAR
+wf_blr_fieldnames = ['STATE', 'T_CTRL', 'TEMP', 'TEMP_SET']
 circ_fieldnames = ['CIRC1_1', 'CIRC1_2', 'CIRC2_1', 'CIRC2_2']  # numeration must be like in wl.py BOILER_VAR
+dobby_fieldnames = ['DBG', 'LOG', 'EMULATION', 'UPDATE_TIME']
 
 wts = []
 wf = {}
 boiler = {}
 circ = {}
-
+dobby = {}
 
 def create_cfg_files(filename):
     if filename==FILENAME_WTS_CONF:
@@ -38,17 +41,25 @@ def create_cfg_files(filename):
             wts.append(wtsx.copy())
             wts[i][wts_fieldnames[0]] = str(i)
 
-        with open(FILENAME_WTS_CONF, 'w') as outfile:
+        with open(filename, 'w') as outfile:
             json.dump(wts, outfile)
 
     if filename == FILENAME_WF_CONF:
         wf = dict.fromkeys(wf_blr_fieldnames)
-        with open(FILENAME_WF_CONF, 'w') as outfile:
+        wf[wf_blr_fieldnames[0]] = '0'
+        wf[wf_blr_fieldnames[1]] = '0'
+        wf[wf_blr_fieldnames[2]] = '0'
+        wf[wf_blr_fieldnames[3]] = '0'
+        with open(filename, 'w') as outfile:
             json.dump(wf, outfile)
 
     if filename==FILENAME_BOILER_CONF:
         boiler = dict.fromkeys(wf_blr_fieldnames)
-        with open(FILENAME_BOILER_CONF, 'w') as outfile:
+        boiler[wf_blr_fieldnames[0]] = '0'
+        boiler[wf_blr_fieldnames[1]] = '0'
+        boiler[wf_blr_fieldnames[2]] = '0'
+        boiler[wf_blr_fieldnames[3]] = '0'
+        with open(filename, 'w') as outfile:
             json.dump(boiler, outfile)
 
     if filename==FILENAME_CIRC_CONF:
@@ -57,11 +68,21 @@ def create_cfg_files(filename):
         circ[circ_fieldnames[1]] = '0'
         circ[circ_fieldnames[2]] = '0'
         circ[circ_fieldnames[3]] = '0'
-        with open(FILENAME_CIRC_CONF, 'w') as outfile:
+        with open(filename, 'w') as outfile:
             json.dump(circ, outfile)
 
 
 def init():
+    if os.path.isfile(FILENAME_DOBBY_CONF):
+        read_dobby()
+    else:
+        dobby = dict.fromkeys(dobby_fieldnames)
+        dobby[dobby_fieldnames[0]]='OFF'
+        dobby[dobby_fieldnames[1]] = 'OFF'
+        dobby[dobby_fieldnames[2]] = 'OFF'
+        dobby[dobby_fieldnames[3]] = '1000'
+
+
     if os.path.isfile(FILENAME_WTS_CONF):
         read_wts()
     else:
@@ -82,7 +103,10 @@ def init():
     else:
         create_cfg_files(FILENAME_CIRC_CONF)
 
+# =====================  DOBBY =============================
 
+def read_dobby():
+    dobby.update(read_config(FILENAME_DOBBY_CONF))
 
 # =====================  WTS =============================
 # --------------CONFIG------------
