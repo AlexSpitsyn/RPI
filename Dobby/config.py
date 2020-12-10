@@ -6,16 +6,16 @@
 
 import json
 import os
+import dbg
 
 CONFIG_PATH = "config/"
 FILENAME_WTS_CONF = CONFIG_PATH + "wts.cfg"
-FILENAME_BOILER_CONF = CONFIG_PATH+ "boiler.cfg"
+FILENAME_BOILER_CONF = CONFIG_PATH + "boiler.cfg"
 FILENAME_WF_CONF = CONFIG_PATH + "wf.cfg"
-FILENAME_CIRC_CONF = CONFIG_PATH+ "circ.cfg"
-FILENAME_DOBBY_CONF = CONFIG_PATH+ "dobby.cfg"
+FILENAME_CIRC_CONF = CONFIG_PATH + "circ.cfg"
+FILENAME_DOBBY_CONF = CONFIG_PATH + "dobby.cfg"
 
-wts_addr = [0x53545701, 0x54545701, 0x55545701, 0x56545701, 0x57545701, 0x58545701, 0x59545701, 0x5A545701, 0x5B545701,
-            0x5C545701, 0x5D545701, 0x5E545701, 0x5F545701, 0x60545701, 0x61545701, 0x62545701]
+wts_addr = [0x53545701,0x53545702,0x53545703,0x53545704,0x53545705,0x53545706,0x53545707,0x53545708,0x53545709,0x5354570A,0x5354570B,0x5354570C,0x5354570D,0x5354570E,0x5354570F,0x53545710]
 wfcr_addr = 0x52434657
 boiler_addr = 0x524C4F42
 
@@ -136,7 +136,7 @@ def wts_checking_onoff(wts_num, onoff):
     elif onoff == 'off':
         wts[wts_num][wts_fieldnames[4]] = '0'
     else:
-        print('wrong wts_check_onoff arg')
+        dbg.dbg.printss('wrong wts_check_onoff arg')
     write_wts()
 
 
@@ -184,7 +184,7 @@ def read_config(filename):
         return dct
 
     except IOError:
-        print("read file error: " + filename)
+        dbg.prints("read file error: " + filename)
 
 
 def write_config(filename, dct):
@@ -193,4 +193,4 @@ def write_config(filename, dct):
             json.dump(dct, outfile)
 
     except IOError:
-        print("write config file error: " + filename)
+        dbg.prints("write config file error: " + filename)

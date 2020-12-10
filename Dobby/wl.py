@@ -47,7 +47,7 @@ def wl_rw(addr, cmd, var, val):
 	d=''
 	l=''
 	
-	dbg.prints ('Send Packet to:',hex(addr))
+	dbg.prints ('\r\nSend Packet to:',hex(addr))
 	dbg.prints ('CMD:', cmd)
 	dbg.prints ('VAR:', var)
 	dbg.prints ('VAL:', val)
@@ -161,14 +161,14 @@ def read_wts(wtsn):
 		config.wts[wtsn]["TEMP"] = 'X'
 	
 	config.write_wts()	
-	
+	dbg.prints('WTS' + str(wtsn) + ':' + cmd_state)
 	return cmd_state
 
 def update_wts():
 	for wts_conf in config.wts:
 		if wts_conf["CHECK"] =='1':			
 			res = read_wts(int(wts_conf["WTSN"]))
-			dbg.prints('Read WTS' + wts_conf["WTSN"]+':'+ res)
+
 
 #=====================  WF ===============================
 #STATE / T_CTRL / TEMP / TEMP_SET
@@ -324,7 +324,7 @@ def get_circ():
 			config.circ[config.circ_fieldnames[1]]='X'
 			config.circ[config.circ_fieldnames[0]]='X'
 	else:
-		dbg.prints('WARNING! ', wl_send_state)
+		dbg.prints(wl_send_state)
 		config.circ[config.circ_fieldnames[3]]='X'
 		config.circ[config.circ_fieldnames[2]]='X'
 		config.circ[config.circ_fieldnames[1]]='X'
