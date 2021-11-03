@@ -4,6 +4,28 @@ import os
 import zipfile
 import shutil
 import datetime
+from threading import Timer
+import config
+import wl
+import dbg
+
+config.init()
+UPDATE_TIME = int(config.dobby['UPDATE_TIME'])
+dbg.DEBUG = config.dobby['DBG'] == 'ON'
+wl.EMULATION = config.dobby['EMULATION'] == 'ON'
+wl.LOG_SX1278 = config.dobby['LOG'] == 'ON'
+
+def wl_update():
+    t=Timer(UPDATE_TIME, wl_update)
+    t.start()
+    wl.update_wf()
+    wl.update_boiler()
+    wl.update_wts()
+    wl.get_pump()
+    dbg.prints('update wl')
+    # if wl_update_f==False:
+    #     print('stop wl_upate')
+    #     t.cancel()
 
 base_folder = '/home/alex/Dobby'
 update_file = 'update.zip'
@@ -19,8 +41,13 @@ if not os.path.exists(update_folder):
 if not os.path.exists(backup_folder):
     os.mkdir(backup_folder)
 
-f_log = open('log/log.txt', 'a')
-f_err = open('log/log_err.txt', 'a')
+if os.path.isfile('log/clear'):
+    f_log = open('log/log.txt', 'w')
+    f_err = open('log/log_err.txt', 'w')
+    os.remove('log/clear')
+else:
+    f_log = open('log/log.txt', 'a')
+    f_err = open('log/log_err.txt', 'a')
 # f_update_log = open('log/log_update.txt', 'a')
 
 now = datetime.datetime.now()
@@ -68,16 +95,28 @@ if os.path.isfile(update_folder + '/' + update_file):
         if os.path.isfile(update_folder + '/' + file_name):
             shutil.copy(update_folder + '/' + file_name, current_dir)
             os.remove(update_folder + '/' + file_name)
-            # f_update_log.write('updating  ' + file_name +'\r\n')
+            # f_update_log.write('updating' + file_name +'\r\n')
 
     pass_update = open(update_folder + '/' + 'idle', 'a')
     pass_update.close()
 # ----------------------------------------------------------------
+wl_update()
+while True:
 
-sleep(10)
+    f_log.write("\r\n\t\t\t\tSTARTING DOBBY\r\n")
+    try:
+        sleep(10)
+        #Warning('In RPI must call subprocess with arg python3')
+        if config.dobby['OS'] == 'WIN':
+            subprocess.call(['python', 'dobby.py'])
+        elif config.dobby['OS'] == 'LIN':
+            subprocess.call(['python3', 'dobby.py'], stdout=f_log, stderr=f_err)
+        else:
+            f_err.write('ERROR: OS not set')
 
-subprocess.call(["python3", 'dobby.py'], stdout=f_log, stderr=f_err)
+    except subprocess.CalledProcessError as exception:
+        f_err.write('EXCEPTION')
+        f_err.flush()
 
-f_log.close()
-f_err.close()
-
+# f_log.close()
+# f_err.close()

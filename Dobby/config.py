@@ -12,31 +12,36 @@ CONFIG_PATH = "config/"
 FILENAME_WTS_CONF = CONFIG_PATH + "wts.cfg"
 FILENAME_BOILER_CONF = CONFIG_PATH + "boiler.cfg"
 FILENAME_WF_CONF = CONFIG_PATH + "wf.cfg"
-FILENAME_CIRC_CONF = CONFIG_PATH + "circ.cfg"
+FILENAME_PUMP_CONF = CONFIG_PATH + "pump.cfg"
 FILENAME_DOBBY_CONF = CONFIG_PATH + "dobby.cfg"
 
 wts_addr = [0x53545701,0x53545702,0x53545703,0x53545704,0x53545705,0x53545706,0x53545707,0x53545708,0x53545709,0x5354570A,0x5354570B,0x5354570C,0x5354570D,0x5354570E,0x5354570F,0x53545710]
 wfcr_addr = 0x52434657
 boiler_addr = 0x524C4F42
+DOBBY_TOKEN = '927942451:AAG7HMnzpyLVKcydJiEW0zGjOcnqi7_1EDE'
+DOBBY_DBG_TOKEN = '1576222883:AAEtQ6GWeNWI64NLB3w7jEb1-pXcUu4I0AM'
 
-wts_fieldnames = ['WTSN', 'STATE', 'TEMP', 'NAME', 'CHECK']
+wts_fieldnames = ['WTSN', 'STATE', 'TEMP', 'NAME', 'CHECK', 'GPIO']
 wf_blr_fieldnames = ['STATE', 'T_CTRL', 'TEMP', 'TEMP_SET']
-circ_fieldnames = ['CIRC1_1', 'CIRC1_2', 'CIRC2_1', 'CIRC2_2']  # numeration must be like in wl.py BOILER_VAR
-dobby_fieldnames = ['DBG', 'LOG', 'EMULATION', 'UPDATE_TIME']
+pump_fieldnames = ['PUMP_1_1_SW', 'PUMP_1_2_SW', 'PUMP_2_1_SW', 'PUMP_2_2_SW','PUMP_1_1_ST', 'PUMP_1_2_ST', 'PUMP_2_1_ST', 'PUMP_2_2_ST']  # numeration must be like in wl.py BOILER_VAR
+dobby_fieldnames = ['OS','DBG', 'LOG', 'EMULATION', 'UPDATE_TIME', 'TOKEN']
+
+temp= {'WF_MIN':20, 'WF_MAX': 50, 'BOILER_MIN': 10, 'BOILER_MAX': 65}
 
 wts = []
 wf = {}
 boiler = {}
-circ = {}
+pump = {}
 dobby = {}
 
 def create_cfg_files(filename):
     if filename==FILENAME_WTS_CONF:
         wtsx = dict.fromkeys(wts_fieldnames)
-        wtsx[wts_fieldnames[1]] = 'OFFLINE'
-        wtsx[wts_fieldnames[2]] = '0'
-        wtsx[wts_fieldnames[3]] = 'NoName'
-        wtsx[wts_fieldnames[4]] = '0'
+        wtsx[wts_fieldnames[1]] = 'OFFLINE' #STATE
+        wtsx[wts_fieldnames[2]] = '0'       #TEMP
+        wtsx[wts_fieldnames[3]] = 'NoName'  #NAME
+        wtsx[wts_fieldnames[4]] = '0'       #CHECK
+        wtsx[wts_fieldnames[5]] = '0'       #GPIO
         for i in range(16):
             wts.append(wtsx.copy())
             wts[i][wts_fieldnames[0]] = str(i)
@@ -45,63 +50,64 @@ def create_cfg_files(filename):
             json.dump(wts, outfile)
 
     if filename == FILENAME_WF_CONF:
-        wf = dict.fromkeys(wf_blr_fieldnames)
-        wf[wf_blr_fieldnames[0]] = '0'
-        wf[wf_blr_fieldnames[1]] = '0'
-        wf[wf_blr_fieldnames[2]] = '0'
-        wf[wf_blr_fieldnames[3]] = '0'
+        wf = dict.fromkeys(wf_blr_fieldnames, '0')
+
         with open(filename, 'w') as outfile:
             json.dump(wf, outfile)
 
     if filename==FILENAME_BOILER_CONF:
-        boiler = dict.fromkeys(wf_blr_fieldnames)
-        boiler[wf_blr_fieldnames[0]] = '0'
-        boiler[wf_blr_fieldnames[1]] = '0'
-        boiler[wf_blr_fieldnames[2]] = '0'
-        boiler[wf_blr_fieldnames[3]] = '0'
+        boiler = dict.fromkeys(wf_blr_fieldnames, '0')
+
         with open(filename, 'w') as outfile:
             json.dump(boiler, outfile)
 
-    if filename==FILENAME_CIRC_CONF:
-        circ = dict.fromkeys(circ_fieldnames)
-        circ[circ_fieldnames[0]]='0'
-        circ[circ_fieldnames[1]] = '0'
-        circ[circ_fieldnames[2]] = '0'
-        circ[circ_fieldnames[3]] = '0'
+    if filename==FILENAME_PUMP_CONF:
+        pump = dict.fromkeys(pump_fieldnames, 'X')
+
         with open(filename, 'w') as outfile:
-            json.dump(circ, outfile)
+            json.dump(pump, outfile)
 
 
 def init():
     if os.path.isfile(FILENAME_DOBBY_CONF):
         read_dobby()
     else:
+        dbg.prints('WARNING! No such file:'+ FILENAME_DOBBY_CONF)
         dobby = dict.fromkeys(dobby_fieldnames)
-        dobby[dobby_fieldnames[0]]='OFF'
-        dobby[dobby_fieldnames[1]] = 'OFF'
+        dobby[dobby_fieldnames[0]]='WIN'
+        dobby[dobby_fieldnames[1]]='OFF'
         dobby[dobby_fieldnames[2]] = 'OFF'
-        dobby[dobby_fieldnames[3]] = '1000'
-
+        dobby[dobby_fieldnames[3]] = 'OFF'
+        dobby[dobby_fieldnames[4]] = '1000'
+        dobby[dobby_fieldnames[5]] = DOBBY_TOKEN
 
     if os.path.isfile(FILENAME_WTS_CONF):
         read_wts()
     else:
+        dbg.prints('WARNING! No such file:' + FILENAME_WTS_CONF)
+        dbg.prints('Creating file...')
         create_cfg_files(FILENAME_WTS_CONF)
 
     if os.path.isfile(FILENAME_WF_CONF):
         read_wf()
     else:
+        dbg.prints('WARNING! No such file:' + FILENAME_WF_CONF)
+        dbg.prints('Creating file...')
         create_cfg_files(FILENAME_WF_CONF)
 
     if os.path.isfile(FILENAME_BOILER_CONF):
         read_boiler()
     else:
+        dbg.prints('WARNING! No such file:' + FILENAME_BOILER_CONF)
+        dbg.prints('Creating file...')
         create_cfg_files(FILENAME_BOILER_CONF)
 
-    if os.path.isfile(FILENAME_CIRC_CONF):
-        read_circ()
+    if os.path.isfile(FILENAME_PUMP_CONF):
+        read_pump()
     else:
-        create_cfg_files(FILENAME_CIRC_CONF)
+        dbg.prints('WARNING! No such file:' + FILENAME_PUMP_CONF)
+        dbg.prints('Creating file...')
+        create_cfg_files(FILENAME_PUMP_CONF)
 
 # =====================  DOBBY =============================
 
@@ -165,16 +171,16 @@ def write_boiler():
     write_config(FILENAME_BOILER_CONF, boiler)
 
 
-# =====================  CIRC =============================
+# =====================  PUMP =============================
 # -----------------CONFIG--------------------------------------
-# CIRC1_1_STATE / CIRC1_2_STATE / CIRC2_1_STATE / CIRC2_2_STATE
+# PUMP1_1_STATE / PUMP1_2_STATE / PUMP2_1_STATE / PUMP2_2_STATE
 # -------------------------------------------------------------
-def read_circ():
-    circ.update(read_config(FILENAME_CIRC_CONF))
+def read_pump():
+    pump.update(read_config(FILENAME_PUMP_CONF))
 
 
-def write_circ():
-    write_config(FILENAME_CIRC_CONF, circ)
+def write_pump():
+    write_config(FILENAME_PUMP_CONF, pump)
 
 
 def read_config(filename):

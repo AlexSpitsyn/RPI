@@ -1,14 +1,14 @@
 [Unit]
-Description=dobby
+Description=sms_monitor
 After=network.target
 
 [Service]
-ExecStart=/usr/bin/python3 run_dobby.py > run_log.txt
+ExecStart=/usr/bin/python3 sms_monitor.py
 WorkingDirectory=/home/alex/Dobby/
 StandardOutput=inherit
 StandardError=inherit
 Restart=always
-User=root
+User=pi
 
 [Install]
 WantedBy=multi-user.target
