@@ -12,7 +12,7 @@ import wl
 import config
 import dbg
 import os
-
+import time
 
 Alex_ID = 972228317
 #TOKEN = '927942451:AAG7HMnzpyLVKcydJiEW0zGjOcnqi7_1EDE'
@@ -37,6 +37,7 @@ Alex_ID = 972228317
 def drow_wts_menu(idle=' '):
     global gcall
     global wts_num
+    config.read_wts()
     wts_check = config.wts[wts_num]["CHECK"]
     wts_name = config.wts[wts_num]["NAME"]
     wts_temp = config.wts[wts_num]["TEMP"]
@@ -44,23 +45,25 @@ def drow_wts_menu(idle=' '):
     wts_gpio = config.wts[wts_num]["GPIO"]
 
     if wts_check == '1':
-        if wts_state == wl.WL_STATE[0]:  # 'OK'
-            button_wts_onoff_text = '✅'
-            if wts_gpio == '1':
-                button_gpio_text = '🟢'
-            else:
-                button_gpio_text = '🔴'
-        elif wts_state == wl.WL_STATE[4]:  # 'OFFLINE'
-            button_wts_onoff_text = '🛑'  # offline
-        else:
-            button_wts_onoff_text = '⚠️\r\n' + wts_state
-
-        header_str = 'Д' + str(wts_num + 1) + '  ' + wts_name + '  ' + wts_temp + '°C' + idle
-
+        button_wts_onoff_text = '✅'
     else:
         button_wts_onoff_text = '⏹'  # not checked
-        button_gpio_text = '🔴'
-        header_str = 'Д' + str(wts_num + 1) + '  ' + wts_name + '- OFF' + idle
+
+    if wts_state == wl.WL_STATE[0]:  # 'OK'
+        header_str = 'Д' + str(wts_num + 1) + '  ' + wts_name + '  ' + wts_temp + '°C' + idle
+        if wts_gpio == '1':
+            button_gpio_text = '🟢'
+        else:
+            button_gpio_text = '🔴'
+
+    elif wts_state == wl.WL_STATE[4]:  # 'OFFLINE'
+        header_str = 'Д' + str(wts_num + 1) + '  ' + wts_name + ' OFFLINE' + idle
+        button_gpio_text = '⚠'
+
+    else:
+        header_str = 'Д' + str(wts_num + 1) + '  ' + wts_state + idle
+        button_gpio_text = '⚠'
+
 
     wts_options_menu = types.InlineKeyboardMarkup()
     key1 = types.InlineKeyboardButton(text='Имя', callback_data='set_wts_name')
@@ -80,7 +83,7 @@ def drow_wts_menu(idle=' '):
 
 def drow_boiler_menu(idle=' '):
     global gcall
-
+    config.read_boiler()
     state = config.boiler[config.wf_blr_fieldnames[0]]
     temp_ctrl = config.boiler[config.wf_blr_fieldnames[1]]
     temp = config.boiler[config.wf_blr_fieldnames[2]]
@@ -101,7 +104,7 @@ def drow_boiler_menu(idle=' '):
         header_str = 'Котёл - нет связи' + idle
     else:
         button_onoff_text = '⚠️'
-        header_str = 'Котёл - error ' + state + idle
+        header_str = 'Котёл ' + state + idle
 
     boiler_options_menu = types.InlineKeyboardMarkup()
     key1 = types.InlineKeyboardButton(text=button_onoff_text, callback_data='boiler_onoff')
@@ -118,7 +121,7 @@ def drow_boiler_menu(idle=' '):
 
 def drow_wf_menu(idle=' '):
     global gcall
-
+    config.read_wf()
     state = config.wf[config.wf_blr_fieldnames[0]]
     temp_ctrl = config.wf[config.wf_blr_fieldnames[1]]
     temp = config.wf[config.wf_blr_fieldnames[2]]
@@ -139,7 +142,7 @@ def drow_wf_menu(idle=' '):
         header_str = 'ТП - нет связи' + idle
     else:
         button_onoff_text = '⚠️'
-        header_str = 'ТП - error ' + state + idle
+        header_str = 'ТП ' + state + idle
 
     wf_options_menu = types.InlineKeyboardMarkup()
     key1 = types.InlineKeyboardButton(text=button_onoff_text, callback_data='wf_onoff')
@@ -152,22 +155,32 @@ def drow_wf_menu(idle=' '):
     markup = wf_options_menu
     message_out = bot.edit_message_text(header_str, gcall.message.chat.id, gcall.message.message_id,
                                         reply_markup=markup)
-def drow_pump_menu():
+def drow_pump_menu(idle=' '):
     global gcall
+    config.read_pump()
+    state = config.pump['STATE']
     button_pump =['XX','XX','XX','XX']
-    button_pump_char={'00':'🛑','10':'Ⓜ','01':'⚠','11':'✅', 'XX':'❗'}
+    button_pump_char={'00':'🛑','10':'Ⓜ','01':'⚠','11':'✅', 'XX':'❗', '0X':'🛑❗', '1X':'✅❗', 'X0':'!❗', 'X1':'❗!'}
     for x in range(4):
-         button_pump[x] = config.pump[config.pump_fieldnames[x+4]] + config.pump[config.pump_fieldnames[x]]
+         button_pump[x] = config.pump[config.pump_fieldnames[x+5]] + config.pump[config.pump_fieldnames[x+1]]
          #PUMP_X_X_ST + PUMP_X_X_SW
+
+    if state == wl.WL_STATE[0]:  # 'OK'
+        header_str = 'Насосы ' + idle
+    elif state == wl.WL_STATE[4]:  # 'OFFLINE'
+        header_str = 'Насосы ' + 'нет связи' + idle
+    else:
+        header_str = 'Насосы ' + state + idle
+
 
 
     pumps_menu = types.InlineKeyboardMarkup()
     # key1 = types.InlineKeyboardButton(text=button5_text + '    ДОМ', callback_data='pump_toggle@PUMP_MAIN')
     # key2 = types.InlineKeyboardButton(text=button6_text + '    ХБ', callback_data='pump_toggle@PUMP_HB')
-    key3 = types.InlineKeyboardButton(text=button_pump_char[button_pump[0]] + '  Кухня-гост', callback_data='pump_toggle@' + config.pump_fieldnames[0])
-    key4 = types.InlineKeyboardButton(text=button_pump_char[button_pump[1]]  + '  Прихожая-сп.гост', callback_data='pump_toggle@' + config.pump_fieldnames[1])
-    key5 = types.InlineKeyboardButton(text=button_pump_char[button_pump[2]]  + '  Спальная 2.1 -2.2.', callback_data='pump_toggle@' + config.pump_fieldnames[2])
-    key6 = types.InlineKeyboardButton(text=button_pump_char[button_pump[3]]  + '  Спальная 2.3 -2.4.', callback_data='pump_toggle@' + config.pump_fieldnames[3])
+    key3 = types.InlineKeyboardButton(text=button_pump_char[button_pump[0]] + '  Кухня-гост', callback_data='pump_toggle@' + config.pump_fieldnames[1])
+    key4 = types.InlineKeyboardButton(text=button_pump_char[button_pump[1]]  + '  Прихожая-сп.гост', callback_data='pump_toggle@' + config.pump_fieldnames[2])
+    key5 = types.InlineKeyboardButton(text=button_pump_char[button_pump[2]]  + '  Спальная 2.1 -2.2.', callback_data='pump_toggle@' + config.pump_fieldnames[3])
+    key6 = types.InlineKeyboardButton(text=button_pump_char[button_pump[3]]  + '  Спальная 2.3 -2.4.', callback_data='pump_toggle@' + config.pump_fieldnames[4])
 
     key_back.callback_data = 'heat_select'
     # pumps_menu.row(key1)
@@ -179,7 +192,7 @@ def drow_pump_menu():
     pumps_menu.row(key_back, key_home)
 
     markup = pumps_menu
-    message_out = bot.edit_message_text('Насосы', gcall.message.chat.id, gcall.message.message_id, reply_markup=markup)
+    message_out = bot.edit_message_text(header_str, gcall.message.chat.id, gcall.message.message_id, reply_markup=markup)
 
 #======================================================================================================
 #
@@ -187,7 +200,9 @@ def drow_pump_menu():
 #
 #======================================================================================================
 
+config.init_dobby()
 config.init()
+
 bot = telebot.TeleBot(config.dobby['TOKEN'])
 UPDATE_TIME = int(config.dobby['UPDATE_TIME'])
 dbg.DEBUG = config.dobby['DBG'] == 'ON'
@@ -265,6 +280,8 @@ def inline_key(a):
         bot.send_document(a.chat.id, send_file)
 
     if a.text == "reboot":
+        bot.send_message(a.chat.id,'Добби ушёл...')
+        time.sleep(10)
         os.system('shutdown -r now')
 
     if a.text == "clear log":

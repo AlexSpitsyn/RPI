@@ -9,13 +9,15 @@ import config
 import wl
 import dbg
 
-config.init()
+config.init_dobby()
 UPDATE_TIME = int(config.dobby['UPDATE_TIME'])
 dbg.DEBUG = config.dobby['DBG'] == 'ON'
 wl.EMULATION = config.dobby['EMULATION'] == 'ON'
 wl.LOG_SX1278 = config.dobby['LOG'] == 'ON'
+config.init()
 
 def wl_update():
+
     t=Timer(UPDATE_TIME, wl_update)
     t.start()
     wl.update_wf()

@@ -6,6 +6,8 @@
 
 import json
 import os
+from typing import List, Any
+
 import dbg
 
 CONFIG_PATH = "config/"
@@ -23,7 +25,7 @@ DOBBY_DBG_TOKEN = '1576222883:AAEtQ6GWeNWI64NLB3w7jEb1-pXcUu4I0AM'
 
 wts_fieldnames = ['WTSN', 'STATE', 'TEMP', 'NAME', 'CHECK', 'GPIO']
 wf_blr_fieldnames = ['STATE', 'T_CTRL', 'TEMP', 'TEMP_SET']
-pump_fieldnames = ['PUMP_1_1_SW', 'PUMP_1_2_SW', 'PUMP_2_1_SW', 'PUMP_2_2_SW','PUMP_1_1_ST', 'PUMP_1_2_ST', 'PUMP_2_1_ST', 'PUMP_2_2_ST']  # numeration must be like in wl.py BOILER_VAR
+pump_fieldnames = ['STATE','PUMP_1_1_SW', 'PUMP_1_2_SW', 'PUMP_2_1_SW', 'PUMP_2_2_SW','PUMP_1_1_ST', 'PUMP_1_2_ST', 'PUMP_2_1_ST', 'PUMP_2_2_ST']  # numeration must be like in wl.py BOILER_VAR
 dobby_fieldnames = ['OS','DBG', 'LOG', 'EMULATION', 'UPDATE_TIME', 'TOKEN']
 
 temp= {'WF_MIN':20, 'WF_MAX': 50, 'BOILER_MIN': 10, 'BOILER_MAX': 65}
@@ -67,8 +69,9 @@ def create_cfg_files(filename):
         with open(filename, 'w') as outfile:
             json.dump(pump, outfile)
 
+    outfile.close()
 
-def init():
+def init_dobby():
     if os.path.isfile(FILENAME_DOBBY_CONF):
         read_dobby()
     else:
@@ -80,6 +83,8 @@ def init():
         dobby[dobby_fieldnames[3]] = 'OFF'
         dobby[dobby_fieldnames[4]] = '1000'
         dobby[dobby_fieldnames[5]] = DOBBY_TOKEN
+
+def init():
 
     if os.path.isfile(FILENAME_WTS_CONF):
         read_wts()
@@ -120,7 +125,8 @@ def read_dobby():
 # --------------------------------
 
 def read_wts():
-    wts.extend(read_config(FILENAME_WTS_CONF))
+    global wts
+    wts = read_config(FILENAME_WTS_CONF)
 
 
 def write_wts():
@@ -187,6 +193,7 @@ def read_config(filename):
     try:
         with open(filename, "r") as read_file:
             dct = json.load(read_file)
+            read_file.close()
         return dct
 
     except IOError:
@@ -197,6 +204,7 @@ def write_config(filename, dct):
     try:
         with open(filename, 'w') as outfile:
             json.dump(dct, outfile)
+            outfile.close()
 
     except IOError:
         dbg.prints("write config file error: " + filename)

@@ -96,7 +96,7 @@ def wl_rw(addr, cmd, var, val):
 
 		res = subprocess.run(["wl_send_cmd", str(hex(addr)), cmd, var, str(val), d, l],stdout=subprocess.PIPE, encoding='utf-8')
 		wl_send_code=res.returncode
-		#========  return code 	=========	
+		#========  return code from wl_send_cmd	=========
 		# 0	ok
 		# 1	address fail
 		# 2	bad crc
@@ -108,7 +108,7 @@ def wl_rw(addr, cmd, var, val):
 		# 104 wrong TX CMD
 		# 105 wrong TX VAR
 		# 106 wrong TX VAL
-		#=================================
+		#================================================
 
 		wl_send_ret_str=res.stdout
 		
@@ -155,37 +155,39 @@ WTS_VAR = {
 }
 
 def send_to_wts(wtsn, cmd, var, val):
-
+	config.read_wts()
 	wl_send_state, cmd_state, dev_error_code, retval = wl_rw(config.wts_addr[wtsn], CMD[cmd], WTS_VAR[var], val)
+
+
 	if wl_send_state == WL_STATE[5]:#BUSY
 		return  WL_STATE[5]
-
-	if dev_error_code != '0':
-		dbg.prints('WARNING! DevERC: ' + str(dev_error_code))		
-		config.wts[wtsn]["STATE"] = str(dev_error_code)	
 	else:
 		config.wts[wtsn]["STATE"] = wl_send_state
-	
-	
+		if var in config.wts[wtsn]:
+			config.wts[wtsn][var] = 'X'
+
+
 	if wl_send_state==WL_STATE[0]:#OK
+		if dev_error_code != '0':
+			dbg.prints('WARNING! DevERC: ' + str(dev_error_code))
+			config.wts[wtsn]["STATE"] = wl_send_state + '- DevERC:' + str(dev_error_code)
+
 		if cmd_state=='DONE':
 			if var in config.wts[wtsn]:
 				config.wts[wtsn][var] = retval
 				dbg.prints('Write wts config! ', config.wts[wtsn])
 		else:
 			dbg.prints('WARNING! ', cmd_state)
-			if var in config.wts[wtsn]:
-				config.wts[wtsn][var] = 'X'
-	else:
-		if var in config.wts[wtsn]:
-			config.wts[wtsn][var] = 'X'
-	
-	config.write_wts()	
+			config.wts[wtsn]['STATE'] =	 wl_send_state + '- cmd: ' + cmd_state
+
+
+	config.write_wts()
 	dbg.prints('WTS' + str(wtsn) + ':' + cmd_state)
 	return cmd_state, str(retval)
 
 
 def update_wts():
+	config.read_wts()
 	for wts_conf in config.wts:
 		if wts_conf["CHECK"] =='1':			
 			send_to_wts(int(wts_conf["WTSN"]), 'GET', 'TEMP', 0)
@@ -196,7 +198,7 @@ def set_gpio_wts(wtsn, GPIO_VAL):
 	return send_to_wts(wtsn, 'SET', 'GPIO', GPIO_VAL)[0]
 
 def toggle_gpio_wts(wtsn):
-
+	config.read_wts()
 	if config.wts[wtsn]['GPIO'] == '0':
 		return set_gpio_wts(wtsn, '1')
 
@@ -219,32 +221,32 @@ WF_VAR = {
 	'drv_steps':'10'
 }
 def send_to_wf(cmd, var, val):
-	
+	config.read_wf()
 	wl_send_state, cmd_state, dev_error_code, retval = wl_rw(config.wfcr_addr, CMD[cmd], WF_VAR[var], val)
 
-	if wl_send_state == WL_STATE[5]:  # BUSY
-		return WL_STATE[5]
-	if dev_error_code != '0':
-		dbg.prints('WARNING! DevERC: ' + str(dev_error_code))		
-		config.wf["STATE"] = str(dev_error_code)	
+	if wl_send_state == WL_STATE[5]:#BUSY
+		return  WL_STATE[5]
 	else:
 		config.wf["STATE"] = wl_send_state
-			
-	if wl_send_state==WL_STATE[0]:#OK			 
-		if cmd_state=='DONE':
-			if var in config.wf:
-				config.wf[var]=str(retval)
-		else:
-			dbg.prints(cmd_state)
-			if var in config.wf:
-				config.wf[var] = 'X'
-	else:
-		dbg.prints(wl_send_state)
 		if var in config.wf:
 			config.wf[var] = 'X'
-	
+
+
+	if wl_send_state==WL_STATE[0]:#OK
+		if dev_error_code != '0':
+			dbg.prints('WARNING! DevERC: ' + str(dev_error_code))
+			config.wf["STATE"] = wl_send_state + ' DevERC:' + str(dev_error_code)
+
+		if cmd_state=='DONE':
+			if var in config.wf:
+				config.wf[var] = retval
+				dbg.prints('Write wf config! ', config.wf)
+		else:
+			dbg.prints('WARNING! ', cmd_state)
+			config.wf['STATE'] = wl_send_state + ' cmd: ' + cmd_state
+
 	config.write_wf()
-	
+
 	return cmd_state, str(retval)
 	
 	
@@ -263,6 +265,7 @@ def update_wf():
 
 	
 def toggle_wf():
+	config.read_wf()
 	if config.wf['T_CTRL'] == '0':
 		return set_wf('T_CTRL', 1)
 
@@ -288,30 +291,29 @@ BOILER_VAR = {
 }
 
 def send_to_boiler(cmd, var, val):
+	config.read_boiler()
 	
 	wl_send_state, cmd_state, dev_error_code, retval = wl_rw(config.boiler_addr, CMD[cmd], BOILER_VAR[var], val)
 
-	if wl_send_state == WL_STATE[5]:#BUSY
-		return  WL_STATE[5]
-
-	if dev_error_code != '0':
-		dbg.prints('WARNING! DevERC: ' + str(dev_error_code))		
-		config.boiler["STATE"] = str(dev_error_code)	
+	if wl_send_state == WL_STATE[5]:  # BUSY
+		return WL_STATE[5]
 	else:
 		config.boiler["STATE"] = wl_send_state
-			
-	if wl_send_state==WL_STATE[0]:#OK			 
-		if cmd_state=='DONE':
-			if val in config.boiler:
-				config.boiler[var]=str(retval)
+		if var in config.boiler:
+			config.boiler[var] = 'X'
+
+	if wl_send_state == WL_STATE[0]:  # OK
+		if dev_error_code != '0':
+			dbg.prints('WARNING! DevERC: ' + str(dev_error_code))
+			config.boiler["STATE"] = wl_send_state + ' DevERC:' + str(dev_error_code)
+
+		if cmd_state == 'DONE':
+			if var in config.boiler:
+				config.boiler[var] = retval
+				dbg.prints('Write boiler config! ', config.boiler)
 		else:
-			dbg.prints(cmd_state)
-			if val in config.boiler:
-				config.boiler[val] = 'X'
-	else:
-		dbg.prints(wl_send_state)
-		if val in config.boiler:
-			config.boiler[val] = 'X'
+			dbg.prints('WARNING! ', cmd_state)
+			config.boiler['STATE'] = wl_send_state + ' cmd: ' + cmd_state
 
 	config.write_boiler()
 	return cmd_state, str(retval)
@@ -327,6 +329,7 @@ def set_boiler(var, val):
 
 
 def update_boiler():
+
 	if get_boiler('T_CTRL')[0] == 'DONE' and get_boiler('TEMP')[0] == 'DONE' and  get_boiler('TEMP_SET')[0] == 'DONE':
 		return 'OK'
 	else:
@@ -334,7 +337,7 @@ def update_boiler():
 	
 
 def toggle_boiler():
-
+	config.read_boiler()
 	if config.boiler['T_CTRL'] == '0':
 		return set_boiler('T_CTRL', 1)
 			
@@ -345,75 +348,73 @@ def toggle_boiler():
 #=====================  PUMP ===================== ========
 #PUMP_1_1_SW / PUMP_1_2_SW / PUMP_2_1_SW / PUMP_2_2_SW / PUMP_1_1_ST / PUMP_1_2_ST / PUMP_2_1_ST / PUMP_2_2_ST
 def get_pump():
+	config.read_pump()
 	wl_send_state, cmd_state, dev_error_code, retval = wl_rw(config.wfcr_addr, CMD['GET'], WF_VAR['pump'], 0)
-	
-	if wl_send_state == WL_STATE[5]:#BUSY
-		return  WL_STATE[5]
-		
-	if dev_error_code != '0':
-		dbg.prints('WARNING! DevERC: ' + str(dev_error_code))		
 
-			
-	if wl_send_state==WL_STATE[0]:#OK			 
-		if cmd_state=='DONE':
+	if wl_send_state == WL_STATE[5]:  # BUSY
+		return WL_STATE[5]
+	else:
+		config.pump = dict.fromkeys(config.pump_fieldnames, 'X')
+		config.pump["STATE"] = wl_send_state
+
+	if wl_send_state == WL_STATE[0]:  # OK
+		if dev_error_code != '0':
+			dbg.prints('WARNING! DevERC: ' + str(dev_error_code))
+			config.pump["STATE"] = wl_send_state + ' DevERC:' + str(dev_error_code)
+
+		if cmd_state == 'DONE':
 			bit_str = format(int(retval), '08b')
 			l = len(bit_str)
 			dbg.prints('PUMP RETURN VAL: ' + bit_str)
-			config.pump[config.pump_fieldnames[0]] = bit_str[l - 1]
-			config.pump[config.pump_fieldnames[1]] = bit_str[l - 2]
-			config.pump[config.pump_fieldnames[2]] = bit_str[l - 3]
-			config.pump[config.pump_fieldnames[3]] = bit_str[l - 4]
-			config.pump[config.pump_fieldnames[4]] = bit_str[l - 5]
-			config.pump[config.pump_fieldnames[5]] = bit_str[l - 6]
-			config.pump[config.pump_fieldnames[6]] = bit_str[l - 7]
-			config.pump[config.pump_fieldnames[7]] = bit_str[l - 8]
+			config.pump[config.pump_fieldnames[1]] = bit_str[l - 1]
+			config.pump[config.pump_fieldnames[2]] = bit_str[l - 2]
+			config.pump[config.pump_fieldnames[3]] = bit_str[l - 3]
+			config.pump[config.pump_fieldnames[4]] = bit_str[l - 4]
+			config.pump[config.pump_fieldnames[5]] = bit_str[l - 5]
+			config.pump[config.pump_fieldnames[6]] = bit_str[l - 6]
+			config.pump[config.pump_fieldnames[7]] = bit_str[l - 7]
+			config.pump[config.pump_fieldnames[8]] = bit_str[l - 8]
+
 		else:
 			dbg.prints('WARNING! ', cmd_state)
-			config.pump = dict.fromkeys(config.pump, 'X')
-	else:
-		dbg.prints(wl_send_state)
-		config.pump = dict.fromkeys(config.pump, 'X')
+			config.pump['STATE'] = wl_send_state + ' cmd: ' + cmd_state
 
-	
 	config.write_pump()
-		
-		
 	return cmd_state
 	
 	
 
 def pump_onoff(pump_name, onoff):
-		
+	config.read_pump()
 	config.pump[pump_name]=str(onoff)
-	bit_str='100000000000'+ config.pump[config.pump_fieldnames[3]] + config.pump[config.pump_fieldnames[2]]+ config.pump[config.pump_fieldnames[1]] + config.pump[config.pump_fieldnames[0]]
+	bit_str='100000000000'+ config.pump[config.pump_fieldnames[4]] + config.pump[config.pump_fieldnames[3]]+ config.pump[config.pump_fieldnames[2]] + config.pump[config.pump_fieldnames[1]]
 	
 	val=int(bit_str,2)	
 	
 	wl_send_state, cmd_state, dev_error_code, retval = wl_rw(config.wfcr_addr, CMD['SET'], WF_VAR['pump'], val)
 
-	if wl_send_state == WL_STATE[5]:#BUSY
-		return  WL_STATE[5]
-	if dev_error_code != '0':
-		dbg.prints('WARNING! DevERC: ' + str(dev_error_code))		
-
-			
-	if wl_send_state==WL_STATE[0]:#OK			 
-		if cmd_state=='DONE':					
-			dbg.prints('PUMP RETURN VAL: ' + str(hex(int(retval))))
-		else:
-			dbg.prints('WARNING! ', cmd_state)
-			config.pump[pump_name]='X'
-
+	if wl_send_state == WL_STATE[5]:  # BUSY
+		return WL_STATE[5]
 	else:
-		dbg.prints('WARNING! ', wl_send_state)
-		config.pump[pump_name]='X'
-	
+		#config.pump = dict.fromkeys(config.pump_fieldnames, 'X')
+		config.pump["STATE"] = wl_send_state
+
+	if wl_send_state == WL_STATE[0]:  # OK
+		if dev_error_code != '0':
+			dbg.prints('WARNING! DevERC: ' + str(dev_error_code))
+			config.pump["STATE"] = wl_send_state + ' DevERC:' + str(dev_error_code)
+
+		if cmd_state != 'DONE':
+			config.pump[pump_name] = 'X'
+			dbg.prints('WARNING! ', cmd_state)
+			config.pump['STATE'] = wl_send_state + ' cmd: ' + cmd_state
+
 	config.write_pump()
-		
 	return cmd_state
 	
 	
 def toggle_pump(pump_name):
+	config.read_pump()
 	if config.pump[pump_name]=='0':
 		return pump_onoff(pump_name, 1)
 	else:
