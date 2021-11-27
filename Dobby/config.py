@@ -64,7 +64,8 @@ def create_cfg_files(filename):
             json.dump(boiler, outfile)
 
     if filename==FILENAME_PUMP_CONF:
-        pump = dict.fromkeys(pump_fieldnames, 'X')
+        pump = dict.fromkeys(pump_fieldnames, '0')
+        pump['STATE']= 'OFFLINE'
 
         with open(filename, 'w') as outfile:
             json.dump(pump, outfile)

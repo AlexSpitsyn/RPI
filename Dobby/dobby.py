@@ -159,8 +159,8 @@ def drow_pump_menu(idle=' '):
     global gcall
     config.read_pump()
     state = config.pump['STATE']
-    button_pump =['XX','XX','XX','XX']
-    button_pump_char={'00':'🛑','10':'Ⓜ','01':'⚠','11':'✅', 'XX':'❗', '0X':'🛑❗', '1X':'✅❗', 'X0':'!❗', 'X1':'❗!'}
+    button_pump =['00','00','00','00']
+    button_pump_char={'10':'🛑','00':'Ⓜ','11':'⚠','01':'✅'}
     for x in range(4):
          button_pump[x] = config.pump[config.pump_fieldnames[x+5]] + config.pump[config.pump_fieldnames[x+1]]
          #PUMP_X_X_ST + PUMP_X_X_SW
@@ -181,6 +181,7 @@ def drow_pump_menu(idle=' '):
     key4 = types.InlineKeyboardButton(text=button_pump_char[button_pump[1]]  + '  Прихожая-сп.гост', callback_data='pump_toggle@' + config.pump_fieldnames[2])
     key5 = types.InlineKeyboardButton(text=button_pump_char[button_pump[2]]  + '  Спальная 2.1 -2.2.', callback_data='pump_toggle@' + config.pump_fieldnames[3])
     key6 = types.InlineKeyboardButton(text=button_pump_char[button_pump[3]]  + '  Спальная 2.3 -2.4.', callback_data='pump_toggle@' + config.pump_fieldnames[4])
+    key7 = types.InlineKeyboardButton(text='🔄', callback_data='pump_update')
 
     key_back.callback_data = 'heat_select'
     # pumps_menu.row(key1)
@@ -189,6 +190,7 @@ def drow_pump_menu(idle=' '):
     pumps_menu.row(key4)
     pumps_menu.row(key5)
     pumps_menu.row(key6)
+    pumps_menu.row(key7)
     pumps_menu.row(key_back, key_home)
 
     markup = pumps_menu
@@ -318,7 +320,7 @@ def inline_key(a):
                 if int(a.text) >= config.temp['BOILER_MIN'] and int(a.text) <= config.temp['BOILER_MAX']:
                     message_out_cnt += 1
                     # wl.set_boiler() return WL_CMD_STATE
-                    if wl.set_boiler(wl.BOILER_VAR['TEMP_SET'], int(a.text)) != wl.WL_CMD_STATE[0]:
+                    if wl.set_boiler('TEMP_SET', int(a.text)) != wl.WL_CMD_STATE[0]:
                         bot.send_message(a.chat.id, "Что-то пошло не так... Тут нужна магия")
                     else:
                         drow_boiler_menu()
@@ -338,7 +340,7 @@ def inline_key(a):
                 if int(a.text) > config.temp['WF_MIN'] and int(a.text) < config.temp['WF_MAX']:
                     message_out_cnt += 1
 
-                    if wl.set_wf(wl.WF_VAR['TEMP_SET'], int(a.text)) != wl.WL_CMD_STATE[0]:
+                    if wl.set_wf('TEMP_SET', int(a.text)) != wl.WL_CMD_STATE[0]:
                         bot.send_message(a.chat.id, "Что-то пошло не так... Тут нужна магия")
                     else:
                         drow_wf_menu()
@@ -524,7 +526,7 @@ def callback_inline(call):
 
     elif call.data == "wts_update":
         drow_wts_menu("⏳")
-        config.wts_checking_onoff(wts_num, 'on')  # turn wts ON
+        #config.wts_checking_onoff(wts_num, 'on')  # turn wts ON
         wl.read_wts(wts_num)
         drow_wts_menu()
 
@@ -542,9 +544,9 @@ def callback_inline(call):
 
     elif call.data == "boiler_onoff":
         if config.boiler['T_CTRL'] == '0':
-            wl.set_boiler(wl.BOILER_VAR['T_CTRL'], 1)
+            wl.set_boiler('T_CTRL', 1)
         elif config.boiler['T_CTRL'] == '1':
-            wl.set_boiler(wl.BOILER_VAR['T_CTRL'], 0)
+            wl.set_boiler('T_CTRL', 0)
         drow_boiler_menu()
 
     elif call.data == "boiler_update":
@@ -561,9 +563,9 @@ def callback_inline(call):
     elif call.data == "wf_onoff":
         if config.wf['STATE'] == wl.WL_STATE[0]:  # 'OK':
             if config.wf['T_CTRL'] == '0':
-                wl.set_wf(wl.WF_VAR['T_CTRL'], 1)
+                wl.set_wf('T_CTRL', 1)
             elif config.wf['T_CTRL'] == '1':
-                wl.set_wf(wl.WF_VAR['T_CTRL'], 0)
+                wl.set_wf('T_CTRL', 0)
             drow_wf_menu()
 
     elif call.data == "wf_update":
@@ -586,7 +588,14 @@ def callback_inline(call):
 
     elif call.data.split('@')[0] == 'pump_toggle':
         pump = call.data.split('@')[1]
+        drow_pump_menu("⏳")
         wl.toggle_pump(pump)
+        wl.get_pump()
+        drow_pump_menu()
+
+    elif call.data.split('@')[0] == 'pump_update':
+        drow_pump_menu("⏳")
+        wl.get_pump()
         drow_pump_menu()
 
 
