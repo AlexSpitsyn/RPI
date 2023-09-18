@@ -23,7 +23,9 @@ CMD = {'CMD_PRESENT':'0',
 	'GET':'1', 
 	'SET':'2', 
 	'EEPROM_WR':'3',
-	'ERR_CLR':'4' }
+	'ERR_CLR':'4',
+	'RESET':'5'
+	}
 	
 WL_CMD_STATE = {
 	0:'DONE',
@@ -127,7 +129,7 @@ def wl_rw(addr, cmd, var, val):
 
 				# ADDR;STATE;CMD;VAR;VAL;DESC;ERROR_CODE
 				parts=wl_send_ret_str.split(';')
-				addr = parts[0]
+				addr = hex(int(parts[0]))
 				cmd_state = int(parts[1])
 				cmd = parts[2]
 				var = parts[3]
@@ -136,7 +138,7 @@ def wl_rw(addr, cmd, var, val):
 				dev_error_code = parts[6]
 			#END LIN
 		
-		dbg.prints('ADDR: ', hex(int(addr)))
+		dbg.prints('ADDR: ', addr)
 		dbg.prints('CMD STATE: ', WL_CMD_STATE[cmd_state])
 		dbg.prints('CMD: ', cmd)
 		dbg.prints('VAR: ', var)
@@ -174,14 +176,18 @@ def send_to_wts(wtsn, cmd, var, val):
 
 		if cmd_state=='DONE':
 			if var in config.wts[wtsn]:
+				if var == 'TEMP':#convert to signet
+					t = int(retval)
+					t = (t + 2**7) % 2**8 - 2**7
+					retval = str(t)
 				config.wts[wtsn][var] = retval
 				dbg.prints('Write wts config! ', config.wts[wtsn])
 		else:
 			dbg.prints('WARNING! ', cmd_state)
 			config.wts[wtsn]['STATE'] =	 wl_send_state + '- cmd: ' + cmd_state
-	else:
-		if var in config.wts[wtsn]:
-			config.wts[wtsn][var] = 'X'
+	# else:
+	# 	if var in config.wts[wtsn]:
+	# 		config.wts[wtsn][var] = '0'
 
 	config.write_wts()
 	dbg.prints('WTS' + str(wtsn) + ':' + cmd_state)

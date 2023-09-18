@@ -13,8 +13,10 @@ import config
 import dbg
 import os
 import time
+import ds18b20
+import subprocess
 
-Alex_ID = 972228317
+
 #TOKEN = '927942451:AAG7HMnzpyLVKcydJiEW0zGjOcnqi7_1EDE'
 #wl_update_f=True
 #======================================================================================================
@@ -52,9 +54,9 @@ def drow_wts_menu(idle=' '):
     if wts_state == wl.WL_STATE[0]:  # 'OK'
         header_str = 'Д' + str(wts_num + 1) + '  ' + wts_name + '  ' + wts_temp + '°C' + idle
         if wts_gpio == '1':
-            button_gpio_text = '🟢'
+            button_gpio_text = 'OFF'
         else:
-            button_gpio_text = '🔴'
+            button_gpio_text = 'ON'
 
     elif wts_state == wl.WL_STATE[4]:  # 'OFFLINE'
         header_str = 'Д' + str(wts_num + 1) + '  ' + wts_name + ' OFFLINE' + idle
@@ -235,7 +237,7 @@ def upload_file(message):
 
 
 @bot.message_handler(content_types=['text'])
-def inline_key(a):
+def inline_key(msg):
     global wts_num
     global input_str_type
     global message_out
@@ -243,125 +245,181 @@ def inline_key(a):
     global gcall
     global set_dict
     global message_out_cnt
+    print (msg.from_user.id)
 
-    if a.text == "/menu":
-        input_str_type = '0'
-        mainmenu = types.InlineKeyboardMarkup()
-        key1 = types.InlineKeyboardButton(text='Прочее', callback_data='other')
-        key2 = types.InlineKeyboardButton(text='Парник', callback_data='parn')
-        key3 = types.InlineKeyboardButton(text='Отопление', callback_data='heat_select')
-        key4 = types.InlineKeyboardButton(text='Температура', callback_data='temp')
-        mainmenu.row(key4, key3)
-        mainmenu.row(key2, key1)
-        bot.send_message(a.chat.id, '\t ГЛАВНОЕ МЕНЮ', reply_markup=mainmenu)
-        # print(type(a.text))
-        bot.delete_message(a.chat.id, a.message_id)
+    if msg.from_user.id not in config.PassID:
+        bot.send_message(config.Alex_ID, "New User: " + str(msg.from_user.id))
+        bot.send_message(msg.chat.id, 'Permission denied')
 
-    if a.text == "/temp_inf":
-        tempinfo = "Данные датчиков:\r\n"
-        for wts_conf in config.wts:
-            if wts_conf["CHECK"] == '1':
-                if wts_conf['STATE'] == 'OK':
-                    tempinfo = tempinfo + 'Д' + str(int(wts_conf["WTSN"]) + 1) + ' - ' + wts_conf["NAME"] + ': ' + \
-                               wts_conf[
-                                   "TEMP"] + '\r\n'
-                else:
-                    tempinfo = tempinfo + 'Д' + str(int(wts_conf["WTSN"]) + 1) + ' - ' + wts_conf["NAME"] + ': ' + \
-                               wts_conf[
-                                   "STATE"] + '\r\n'
-        bot.send_message(a.message.chat.id, tempinfo)
-        message_out_cnt += 1
+    else:
+        if 'add user' in msg.text:
+            splt_msg = msg.text.split()
+            try:
+                uid = int(splt_msg[2])
+                config.PassID.append(uid)
+                config.write_pass_list(config.PassID)
+            except ValueError:
+                bot.send_message(config.Alex_ID, 'wrong command')
+                bot.send_message(config.Alex_ID, 'add user xxx')
 
-    if a.text == "/get log":
-        send_file = open('log/log.txt', "rb")
-        bot.send_document(a.chat.id, send_file)
 
-    #TODO exception on this command
-    if a.text == "/get log err":
-        send_file = open('log/log_err.txt', "rb")
-        bot.send_document(a.chat.id, send_file)
-
-    if a.text == "reboot":
-        bot.send_message(a.chat.id,'Добби ушёл...')
-        time.sleep(10)
-        os.system('shutdown -r now')
-
-    if a.text == "clear log":
-        f = open('log/clear', 'w')
-        f.close()
-
-    if input_str_type == 'wts_name':
-        if (a.text[0] == '#'):
+# telegram commands
+#menu - start menu
+#temp - temperature info
+#help - help
+        if msg.text == "/menu":
             input_str_type = '0'
-            message_out_cnt += 1
-            wts_name = a.text.strip('#')
-            config.wts[wts_num]["NAME"] = wts_name
-            config.write_wts()
+            mainmenu = types.InlineKeyboardMarkup()
+            key1 = types.InlineKeyboardButton(text='Прочее', callback_data='other')
+            key2 = types.InlineKeyboardButton(text='Парник', callback_data='parn')
+            key3 = types.InlineKeyboardButton(text='Отопление', callback_data='heat_select')
+            key4 = types.InlineKeyboardButton(text='Температура', callback_data='temp')
+            mainmenu.row(key4, key3)
+            mainmenu.row(key2, key1)
+            bot.send_message(msg.chat.id, '\t ГЛАВНОЕ МЕНЮ', reply_markup=mainmenu)
+            # print(type(msg.text))
+            bot.delete_message(msg.chat.id, msg.message_id)
 
-            # msg=bot.send_message(a.chat.id, 'Имя для Д1 - '+ wts_name )
-            # bot.edit_message_text(get_WTS_state(wts_num), message_out.chat.id, message_out.message_id, reply_markup=markup)
-            drow_wts_menu()
-            while message_out_cnt:
-                bot.delete_message(a.chat.id, a.message_id + 1 - message_out_cnt)
-                message_out_cnt -= 1
-        else:
-            bot.answer_callback_query(gcall.id, text="Неверно задано имя", show_alert=True)
-            message_out_cnt += 1
+        if msg.text == "/temp":
+            config.read_wts()
+            config.read_wf()
+            config.read_boiler()
 
-        # print(message_out_cnt)
-
-
-    elif input_str_type.split('@')[0] == 'temp':
-        temp_type = input_str_type.split('@')[1]
-
-        if (a.text.isdigit()):
-
-            if temp_type == 'boiler':
-                if int(a.text) >= config.temp['BOILER_MIN'] and int(a.text) <= config.temp['BOILER_MAX']:
-                    message_out_cnt += 1
-                    # wl.set_boiler() return WL_CMD_STATE
-                    if wl.set_boiler('TEMP_SET', int(a.text)) != wl.WL_CMD_STATE[0]:
-                        bot.send_message(a.chat.id, "Что-то пошло не так... Тут нужна магия")
-                    else:
-                        drow_boiler_menu()
-
-                    input_str_type = '0'
-                    while message_out_cnt:
-                        bot.delete_message(a.chat.id, a.message_id + 1 - message_out_cnt)
-                        message_out_cnt -= 1
-
+            tempinfo = 'Котёл: '
+            if config.boiler['STATE'] == 'OK':
+                if config.boiler['T_CTRL'] == '1':
+                    tempinfo = tempinfo + 'ON '
                 else:
-                    bot.send_message(a.chat.id, 'Значение должно быть в интервале\nMin: ' +
-                                     str(config.temp['BOILER_MIN']) + '\n' +
-                                     'Max: ' + str(config.temp['BOILER_MAX']))
-                    message_out_cnt += 2
+                    tempinfo = tempinfo + 'OFF '
+                tempinfo = tempinfo + config.boiler['TEMP'] + '\r\n'
+            else:
+                tempinfo = tempinfo  + config.boiler['STATE'] + '\r\n'
 
-            elif temp_type == 'wf':
-                if int(a.text) > config.temp['WF_MIN'] and int(a.text) < config.temp['WF_MAX']:
-                    message_out_cnt += 1
-
-                    if wl.set_wf('TEMP_SET', int(a.text)) != wl.WL_CMD_STATE[0]:
-                        bot.send_message(a.chat.id, "Что-то пошло не так... Тут нужна магия")
-                    else:
-                        drow_wf_menu()
-
-                    input_str_type = '0'
-                    while message_out_cnt:
-                        bot.delete_message(a.chat.id, a.message_id + 1 - message_out_cnt)
-                        message_out_cnt -= 1
-
+            tempinfo = tempinfo + 'ТП: '
+            if config.wf['STATE'] == 'OK':
+                if config.wf['T_CTRL'] == '1':
+                    tempinfo = tempinfo + 'ON '
                 else:
-                    bot.send_message(a.chat.id, 'Значение должно быть в интервале\nMin: ' +
-                                     str(config.temp['BOILER_MIN']) + '\n' +
-                                     'Max: ' + str(config.temp['BOILER_MAX']))
-                    message_out_cnt += 2
+                    tempinfo = tempinfo + 'OFF '
+                tempinfo = tempinfo + config.wf['TEMP'] + '\r\n'
+            else:
+                tempinfo = tempinfo + config.wf['STATE'] + '\r\n'
 
-            # bot.delete_message(a.chat.id, a.message_id)
-            # bot.delete_message(a.chat.id, a.message_id-1)
+            t_base = str(ds18b20.get_temp())
+            tempinfo = tempinfo + 'Темп база: ' + t_base + '\r\n'
+            tempinfo = tempinfo + "Данные датчиков:\r\n"
+            for wts_conf in config.wts:
+                if wts_conf["CHECK"] == '1':
+                    if wts_conf['STATE'] == 'OK':
+                        tempinfo = tempinfo + 'Д' + str(int(wts_conf["WTSN"]) + 1) + ' - ' + wts_conf["NAME"] + ': ' + \
+                                   wts_conf[
+                                       "TEMP"] + '\r\n'
+                    else:
+                        tempinfo = tempinfo + 'Д' + str(int(wts_conf["WTSN"]) + 1) + ' - ' + wts_conf["NAME"] + ': ' + \
+                                   wts_conf[
+                                       "STATE"] + '\r\n'
+            bot.send_message(msg.chat.id, tempinfo)
+            message_out_cnt += 1
 
-        else:
-            bot.send_message(a.chat.id, "Неверно задано значение")
-            message_out_cnt += 2
+        if msg.text == "get log":
+            if os.path.isfile('log/log.txt'):
+                send_file = open('log/log.txt', "rb")
+                bot.send_document(msg.chat.id, send_file)
+            else:
+                bot.send_message(msg.chat.id, 'Файл не найден')
+
+        if msg.text.split()[0] == "rad":
+            wl.toggle_gpio_wts(7)
+            bot.send_message(msg.chat.id, 'Файл не найден')
+            wts_conf['STATE'] == 'OK':
+
+
+        if msg.text == "reboot":
+            bot.send_message(msg.chat.id,'Добби ушёл...')
+            time.sleep(10)
+            os.system('shutdown -r now')
+
+        if msg.text.split()[0] == "call":
+            f = subprocess.run(msg.text[5:].split(), stdout=subprocess.PIPE)
+            bot.send_message(msg.chat.id,f.stdout)
+
+
+        if msg.text == "clear log":
+            f = open('log/clear', 'w')
+            f.close()
+
+        if input_str_type == 'wts_name':
+            if (msg.text[0] == '#'):
+                input_str_type = '0'
+                message_out_cnt += 1
+                wts_name = msg.text.strip('#')
+                config.wts[wts_num]["NAME"] = wts_name
+                config.write_wts()
+
+                # msg=bot.send_message(msg.chat.id, 'Имя для Д1 - '+ wts_name )
+                # bot.edit_message_text(get_WTS_state(wts_num), message_out.chat.id, message_out.message_id, reply_markup=markup)
+                drow_wts_menu()
+                #while message_out_cnt:
+                #    bot.delete_message(msg.chat.id, msg.message_id + 1 - message_out_cnt)
+                #    message_out_cnt -= 1
+            else:
+                bot.answer_callback_query(gcall.id, text="Неверно задано имя", show_alert=True)
+                message_out_cnt += 1
+
+            # print(message_out_cnt)
+
+
+        if input_str_type.split('@')[0] == 'set_temp':
+            temp_type = input_str_type.split('@')[1]
+
+            if (msg.text.isdigit()):
+
+                if temp_type == 'boiler':
+                    if int(msg.text) >= config.temp['BOILER_MIN'] and int(msg.text) <= config.temp['BOILER_MAX']:
+                        message_out_cnt += 1
+                        # wl.set_boiler() return WL_CMD_STATE
+                        if wl.set_boiler('TEMP_SET', int(msg.text)).cmd_state != wl.WL_CMD_STATE[0]:
+                            bot.send_message(msg.chat.id, "Что-то пошло не так... Тут нужна магия")
+                        else:
+                            drow_boiler_menu()
+
+                        input_str_type = '0'
+                        #while message_out_cnt:
+                        #    bot.delete_message(msg.chat.id, msg.message_id + 1 - message_out_cnt)
+                        #    message_out_cnt -= 1
+
+                    else:
+                        bot.send_message(msg.chat.id, 'Значение должно быть в интервале\nMin: ' +
+                                         str(config.temp['BOILER_MIN']) + '\n' +
+                                         'Max: ' + str(config.temp['BOILER_MAX']))
+                        message_out_cnt += 2
+
+                elif temp_type == 'wf':
+                    if int(msg.text) > config.temp['WF_MIN'] and int(msg.text) < config.temp['WF_MAX']:
+                        message_out_cnt += 1
+
+                        if wl.set_wf('TEMP_SET', int(msg.text)).cmd_state != wl.WL_CMD_STATE[0]:
+                            bot.send_message(msg.chat.id, "Что-то пошло не так... Тут нужна магия")
+                        else:
+                            drow_wf_menu()
+
+                        input_str_type = '0'
+                        #while message_out_cnt:
+                        #    bot.delete_message(msg.chat.id, msg.message_id + 1 - message_out_cnt)
+                        #    message_out_cnt -= 1
+
+                    else:
+                        bot.send_message(msg.chat.id, 'Значение должно быть в интервале\nMin: ' +
+                                         str(config.temp['BOILER_MIN']) + '\n' +
+                                         'Max: ' + str(config.temp['BOILER_MAX']))
+                        message_out_cnt += 2
+
+                # bot.delete_message(msg.chat.id, msg.message_id)
+                # bot.delete_message(msg.chat.id, msg.message_id-1)
+
+            else:
+                bot.send_message(msg.chat.id, "Неверно задано значение")
+                message_out_cnt += 2
 
 
 @bot.callback_query_handler(func=lambda call: True)
@@ -574,8 +632,7 @@ def callback_inline(call):
         drow_wf_menu()
 
     elif call.data.split('@')[0] == "set_temp":
-        temp_type = call.data.split('@')[1]
-        input_str_type = 'temp@' + temp_type;
+        input_str_type = call.data
 
         bot.send_message(call.message.chat.id, "Введите температуру")
         message_out_cnt += 1
@@ -658,13 +715,18 @@ def callback_inline(call):
                               reply_markup=boiler_options)
 
 
-if os.path.isfile('update/idle'):
-    bot.send_message(Alex_ID, "DOBBY UPDATED")
-    os.remove('update/idle')
+if os.path.isfile('update/update_state'):
+    update_state_str = "unknown"
+    with open('update/update_state', 'r') as update_state:
+        update_state_str = update_state.readline()
+        update_state.close()
+    bot.send_message(config.Alex_ID, "DOBBY UPDATE: " + update_state_str)
+    os.remove('update/update_state')
 #wl_update()
 
-
-bot.send_message(Alex_ID, "привет")
+f = subprocess.run('date', stdout=subprocess.PIPE)
+bot.send_message(config.Alex_ID, f.stdout)
+#bot.send_message(config.Alex_ID, "привет")
 
 bot.polling(none_stop=True, interval=3, timeout=60)
 # while True: # Don't let the main Thread end.

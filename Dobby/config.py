@@ -9,13 +9,14 @@ import os
 from typing import List, Any
 
 import dbg
-
+Alex_ID = 972228317
 CONFIG_PATH = "config/"
 FILENAME_WTS_CONF = CONFIG_PATH + "wts.cfg"
 FILENAME_BOILER_CONF = CONFIG_PATH + "boiler.cfg"
 FILENAME_WF_CONF = CONFIG_PATH + "wf.cfg"
 FILENAME_PUMP_CONF = CONFIG_PATH + "pump.cfg"
 FILENAME_DOBBY_CONF = CONFIG_PATH + "dobby.cfg"
+FILENAME_PASS_LIST = CONFIG_PATH + "id_list.txt"
 
 wts_addr = [0x53545701,0x53545702,0x53545703,0x53545704,0x53545705,0x53545706,0x53545707,0x53545708,0x53545709,0x5354570A,0x5354570B,0x5354570C,0x5354570D,0x5354570E,0x5354570F,0x53545710]
 wfcr_addr = 0x52434657
@@ -35,6 +36,7 @@ wf = {}
 boiler = {}
 pump = {}
 dobby = {}
+PassID = []
 
 def create_cfg_files(filename):
     if filename==FILENAME_WTS_CONF:
@@ -86,6 +88,18 @@ def init_dobby():
         dobby[dobby_fieldnames[5]] = DOBBY_TOKEN
 
 def init():
+    if os.path.isfile(FILENAME_PASS_LIST):
+        with open(FILENAME_PASS_LIST, 'r') as readfile:
+            lines = readfile.readlines()
+            for uid in lines:
+                PassID.append(int(uid))
+    else:
+        dbg.prints('WARNING! No such file:' + FILENAME_PASS_LIST)
+        dbg.prints('Creating file...')
+        idfile = open(FILENAME_PASS_LIST, 'w')
+        idfile.writelines(str(Alex_ID) + '\n')
+        PassID.append(int(Alex_ID))
+        idfile.close()
 
     if os.path.isfile(FILENAME_WTS_CONF):
         read_wts()
@@ -114,6 +128,13 @@ def init():
         dbg.prints('WARNING! No such file:' + FILENAME_PUMP_CONF)
         dbg.prints('Creating file...')
         create_cfg_files(FILENAME_PUMP_CONF)
+
+# =====================  PASS ID =============================
+
+def write_pass_list(lst):
+    with open(FILENAME_PASS_LIST, 'w') as wfile:
+        for uid in lst:
+            wfile.writelines(str(uid) + '\n')
 
 # =====================  DOBBY =============================
 
