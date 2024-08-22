@@ -1,13 +1,8 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-
-# pip3 install pyTelegramBotApi
-
 import telebot
-# from telebot import apihelper, types, util
-from telebot import types, util
-from threading import Timer
+from telebot import types
 import wl
 import config
 import dbg
@@ -16,8 +11,6 @@ import time
 import ds18b20
 import subprocess
 
-
-#TOKEN = '927942451:AAG7HMnzpyLVKcydJiEW0zGjOcnqi7_1EDE'
 #wl_update_f=True
 #======================================================================================================
 #
@@ -247,8 +240,8 @@ def inline_key(msg):
     global message_out_cnt
     print (msg.from_user.id)
 
-    if msg.from_user.id not in config.PassID:
-        bot.send_message(config.Alex_ID, "New User: " + str(msg.from_user.id))
+    if msg.from_user.id not in config.users_ID:
+        bot.send_message(config.admin_ID, "New User: " + str(msg.from_user.id))
         bot.send_message(msg.chat.id, 'Permission denied')
 
     else:
@@ -256,16 +249,19 @@ def inline_key(msg):
             splt_msg = msg.text.split()
             try:
                 uid = int(splt_msg[2])
-                config.PassID.append(uid)
-                config.write_pass_list(config.PassID)
+                config.users_ID.append(uid)
+                config.write_pass_list(config.users_ID)
             except ValueError:
-                bot.send_message(config.Alex_ID, 'wrong command')
-                bot.send_message(config.Alex_ID, 'add user xxx')
+                bot.send_message(config.admin_ID, 'wrong command')
+                bot.send_message(config.admin_ID, 'add user xxx')
 
 
 # telegram commands
 #menu - start menu
 #temp - temperature info
+#boiler - boiler settings
+#wf - wf settings
+#pumps - pumps settings
 #help - help
         if msg.text == "/menu":
             input_str_type = '0'

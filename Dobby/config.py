@@ -1,28 +1,28 @@
 #!/usr/bin/python
 # encoding=utf8
 
-# reload (sys)
-# sys.setdefaultencoding('utf8')
-
 import json
 import os
-from typing import List, Any
-
 import dbg
-Alex_ID = 972228317
+
+# private information
+users_ID = []
+admin_ID = 0
+DOBBY_TOKEN = ''
+tapo_user = ''
+tapo_pass = ''
+
 CONFIG_PATH = "config/"
 FILENAME_WTS_CONF = CONFIG_PATH + "wts.cfg"
 FILENAME_BOILER_CONF = CONFIG_PATH + "boiler.cfg"
 FILENAME_WF_CONF = CONFIG_PATH + "wf.cfg"
 FILENAME_PUMP_CONF = CONFIG_PATH + "pump.cfg"
 FILENAME_DOBBY_CONF = CONFIG_PATH + "dobby.cfg"
-FILENAME_PASS_LIST = CONFIG_PATH + "id_list.txt"
+FILENAME_USERS_LIST = CONFIG_PATH + "users_list.txt"
 
 wts_addr = [0x53545701,0x53545702,0x53545703,0x53545704,0x53545705,0x53545706,0x53545707,0x53545708,0x53545709,0x5354570A,0x5354570B,0x5354570C,0x5354570D,0x5354570E,0x5354570F,0x53545710]
 wfcr_addr = 0x52434657
 boiler_addr = 0x524C4F42
-DOBBY_TOKEN = '927942451:AAG7HMnzpyLVKcydJiEW0zGjOcnqi7_1EDE'
-DOBBY_DBG_TOKEN = '1576222883:AAEtQ6GWeNWI64NLB3w7jEb1-pXcUu4I0AM'
 
 wts_fieldnames = ['WTSN', 'STATE', 'TEMP', 'NAME', 'CHECK', 'GPIO']
 wf_blr_fieldnames = ['STATE', 'T_CTRL', 'TEMP', 'TEMP_SET']
@@ -36,7 +36,9 @@ wf = {}
 boiler = {}
 pump = {}
 dobby = {}
-PassID = []
+
+
+
 
 def create_cfg_files(filename):
     if filename==FILENAME_WTS_CONF:
@@ -75,6 +77,23 @@ def create_cfg_files(filename):
     outfile.close()
 
 def init_dobby():
+    global DOBBY_TOKEN, dobby, admin_ID, tapo_pass, tapo_user, users_ID
+    if os.path.isfile('dobby_login'):
+        with open('dobby_login', "r") as read_file:
+            for line in read_file:
+                line = line.strip()
+                if "tocken" in line:
+                    DOBBY_TOKEN = line.split('=')[1]
+                if "admin_ID" in line:
+                    admin_ID = int(line.split('=')[1])
+                if "tapo_user" in line:
+                    tapo_user = int(line.split('=')[1])
+                if "tapo_pass" in line:
+                    tapo_pass = int(line.split('=')[1])
+            read_file.close()
+    else:
+        return 'login not found'
+
     if os.path.isfile(FILENAME_DOBBY_CONF):
         read_dobby()
     else:
@@ -85,22 +104,22 @@ def init_dobby():
         dobby[dobby_fieldnames[2]] = 'OFF'
         dobby[dobby_fieldnames[3]] = 'OFF'
         dobby[dobby_fieldnames[4]] = '1000'
-        dobby[dobby_fieldnames[5]] = DOBBY_TOKEN
+
+    return 'OK'
 
 def init():
-    if os.path.isfile(FILENAME_PASS_LIST):
-        with open(FILENAME_PASS_LIST, 'r') as readfile:
+    if os.path.isfile(FILENAME_USERS_LIST):
+        with open(FILENAME_USERS_LIST, 'r') as readfile:
             lines = readfile.readlines()
             for uid in lines:
-                PassID.append(int(uid))
+                users_ID.append(int(uid))
     else:
-        dbg.prints('WARNING! No such file:' + FILENAME_PASS_LIST)
+        dbg.prints('WARNING! No such file:' + FILENAME_USERS_LIST)
         dbg.prints('Creating file...')
-        idfile = open(FILENAME_PASS_LIST, 'w')
-        idfile.writelines(str(Alex_ID) + '\n')
-        PassID.append(int(Alex_ID))
+        idfile = open(FILENAME_USERS_LIST, 'w')
+        idfile.writelines(str(admin_ID) + '\n')
+        users_ID.append(admin_ID)
         idfile.close()
-
     if os.path.isfile(FILENAME_WTS_CONF):
         read_wts()
     else:
@@ -132,7 +151,7 @@ def init():
 # =====================  PASS ID =============================
 
 def write_pass_list(lst):
-    with open(FILENAME_PASS_LIST, 'w') as wfile:
+    with open(FILENAME_USERS_LIST, 'w') as wfile:
         for uid in lst:
             wfile.writelines(str(uid) + '\n')
 
