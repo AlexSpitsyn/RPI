@@ -1,3 +1,7 @@
+.idea
+Dobby/__pycache__
+Dobby/dobby_login
+
 # Prerequisites
 *.d
 
@@ -30,3 +34,4 @@
 *.exe
 *.out
 *.app
+
