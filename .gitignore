@@ -1,6 +1,7 @@
 .idea
 Dobby/__pycache__
 Dobby/dobby_login
+Dobby/config
 
 # Prerequisites
 *.d
