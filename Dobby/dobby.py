@@ -431,11 +431,8 @@ def callback_inline(call):
     # ------------------------------------------------------------------------------------
     if call.data == "mainmenu":
         mainmenu = types.InlineKeyboardMarkup()
-        key1 = types.InlineKeyboardButton(text='Прочее', callback_data='other')
-        key2 = types.InlineKeyboardButton(text='Парник', callback_data='parn')
-        key3 = types.InlineKeyboardButton(text='Отопление', callback_data='heat_select')
-        key4 = types.InlineKeyboardButton(text='Температура', callback_data='temp')
-        mainmenu.row(key4, key3)
+        key1 = types.InlineKeyboardButton(text='Отопление', callback_data='heat_select')
+        key2 = types.InlineKeyboardButton(text='Температура', callback_data='temp')
         mainmenu.row(key2, key1)
         bot.edit_message_text('\t ГЛАВНОЕ МЕНЮ', call.message.chat.id, call.message.message_id,
                               reply_markup=mainmenu)
@@ -462,7 +459,6 @@ def callback_inline(call):
     #                                 HEAT SELECT
     # ------------------------------------------------------------------------------------
     elif call.data == "heat_select":
-
         heat_select_menu = types.InlineKeyboardMarkup()
         key1 = types.InlineKeyboardButton(text='Котёл', callback_data='boiler_options')
         key2 = types.InlineKeyboardButton(text='ТП', callback_data='wf_options')
@@ -473,39 +469,6 @@ def callback_inline(call):
         heat_select_menu.row(key_back, key_home)
         bot.edit_message_text('Отопление', call.message.chat.id, call.message.message_id,
                               reply_markup=heat_select_menu)
-
-    # ------------------------------------------------------------------------------------
-    #                                   PARNIC
-    # ------------------------------------------------------------------------------------
-    elif call.data == "parn":
-        parn_menu = types.InlineKeyboardMarkup()
-        key1 = types.InlineKeyboardButton(text='Передняя дв.', callback_data='front_door')
-        key2 = types.InlineKeyboardButton(text='Задняя дв.', callback_data='back_door')
-        key3 = types.InlineKeyboardButton(text='Инф', callback_data='print_parn_inf')
-        key4 = types.InlineKeyboardButton(text='Настройки', callback_data='parn_options')
-        key_back.callback_data = 'mainmenu'
-
-        parn_menu.row(key1, key2)
-        parn_menu.row(key3, key4)
-        parn_menu.row(key_back, key_home)
-        bot.edit_message_text('Парник', call.message.chat.id, call.message.message_id,
-                              reply_markup=parn_menu)
-
-    # ------------------------------------------------------------------------------------
-    #                                   OTHER
-    # ------------------------------------------------------------------------------------
-    elif call.data == "other":
-        other_menu = types.InlineKeyboardMarkup()
-        key1 = types.InlineKeyboardButton(text='Септик', callback_data='front_door')
-
-        key2 = types.InlineKeyboardButton(text='Настройки', callback_data='parn_options')
-        key_back.callback_data = 'mainmenu'
-
-        other_menu.row(key1, key2)
-        other_menu.row(key_back, key_home)
-        bot.edit_message_text('Прочее', call.message.chat.id, call.message.message_id,
-                              reply_markup=other_menu)
-
 
     # ------------------------------------------------------------------------------------
     #                      TEMPERATURE -> INFO
@@ -649,65 +612,6 @@ def callback_inline(call):
         drow_pump_menu("⏳")
         wl.get_pump()
         drow_pump_menu()
-
-    # ------------------------------------------------------------------------------------
-    #                               PARNIC OPTIONS
-    # ------------------------------------------------------------------------------------
-    elif call.data == "front_door":
-        front_door_menu = types.InlineKeyboardMarkup()
-
-        key1 = types.InlineKeyboardButton(text='Открыть', callback_data='wts_options')
-        key2 = types.InlineKeyboardButton(text='Закрыть', callback_data='wts_options')
-        key_back.callback_data = 'parn'
-        front_door_menu.row(key1, key2)
-        front_door_menu.row(key_back, key_home)
-        bot.edit_message_text('Передняя дверь', call.message.chat.id, call.message.message_id,
-                              reply_markup=boiler_options)
-
-    elif call.data == "back_door":
-        back_door_menu = types.InlineKeyboardMarkup()
-
-        key1 = types.InlineKeyboardButton(text='Открыть', callback_data='wts_options')
-        key2 = types.InlineKeyboardButton(text='Закрыть', callback_data='wts_options')
-        key_back.callback_data = 'parn'
-        back_door_menu.row(key1, key2)
-        back_door_menu.row(key_back, key_home)
-        bot.edit_message_text('Задняя дверь', call.message.chat.id, call.message.message_id,
-                              reply_markup=boiler_options)
-
-    elif call.data == "parn_options":
-        parn_options_menu = types.InlineKeyboardMarkup()
-
-        key1 = types.InlineKeyboardButton(text='Передняя дв.', callback_data='wts_options')
-        key2 = types.InlineKeyboardButton(text='Задняя дв.', callback_data='wts_options')
-        key_back.callback_data = 'parn'
-        parn_options_menu.row(key1, key2)
-        parn_options_menu.row(key_back, key_home)
-        bot.edit_message_text('Настройки парника', call.message.chat.id, call.message.message_id,
-                              reply_markup=boiler_options)
-
-    elif call.data == "front_door_options":
-        front_door_options_menu = types.InlineKeyboardMarkup()
-
-        key1 = types.InlineKeyboardButton(text='Темп', callback_data='wts_options')
-        key2 = types.InlineKeyboardButton(text='Макс откр', callback_data='wts_options')
-        key_back.callback_data = 'parn_options'
-        front_door_options_menu.row(key1, key2)
-        front_door_options_menu.row(key_back, key_home)
-        bot.edit_message_text('Настр. передн. двери', call.message.chat.id, call.message.message_id,
-                              reply_markup=boiler_options)
-
-    elif call.data == "back_door_options":
-        back_door_options_menu = types.InlineKeyboardMarkup()
-
-        key1 = types.InlineKeyboardButton(text='Темп', callback_data='wts_options')
-        key2 = types.InlineKeyboardButton(text='Макс откр', callback_data='wts_options')
-        key_back.callback_data = 'parn_options'
-        back_door_options_menu.row(key1, key2)
-        back_door_options_menu.row(key_back, key_home)
-        bot.edit_message_text('Настр. задн. двери', call.message.chat.id, call.message.message_id,
-                              reply_markup=boiler_options)
-
 
 if os.path.isfile('update/update_state'):
     update_state_str = "unknown"
