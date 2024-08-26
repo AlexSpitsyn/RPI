@@ -193,7 +193,7 @@ def wts_checking_onoff(wts_num, onoff):
     elif onoff == 'off':
         wts[wts_num][wts_fieldnames[4]] = '0'
     else:
-        dbg.dbg.printss('wrong wts_check_onoff arg')
+        dbg.prints('wrong wts_check_onoff arg')
     write_wts(wts_num)
 
 
@@ -247,7 +247,7 @@ def read_config(filename):
         return dct
 
     except IOError:
-        dbg.prints("read file error: " + filename)
+        dbg.prints(f"read file error: {filename}")
 
 
 def write_config(filename, dct):
@@ -257,4 +257,4 @@ def write_config(filename, dct):
             outfile.close()
 
     except IOError:
-        dbg.prints("write config file error: " + filename)
+        dbg.prints(f"write config file error: {filename}")
