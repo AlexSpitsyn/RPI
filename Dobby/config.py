@@ -13,14 +13,14 @@ tapo_user = ''
 tapo_pass = ''
 
 CONFIG_PATH = "config/"
-FILENAME_WTS_CONF = CONFIG_PATH + "wts.cfg"
+FILENAME_WTS_CONF = CONFIG_PATH + "wts-#.cfg"
 FILENAME_BOILER_CONF = CONFIG_PATH + "boiler.cfg"
 FILENAME_WF_CONF = CONFIG_PATH + "wf.cfg"
 FILENAME_PUMP_CONF = CONFIG_PATH + "pump.cfg"
 FILENAME_DOBBY_CONF = CONFIG_PATH + "dobby.cfg"
 FILENAME_USERS_LIST = CONFIG_PATH + "users_list.txt"
 
-wts_addr = [0x53545701,0x53545702,0x53545703,0x53545704,0x53545705,0x53545706,0x53545707,0x53545708,0x53545709,0x5354570A,0x5354570B,0x5354570C,0x5354570D,0x5354570E,0x5354570F,0x53545710]
+wts_addr = 0x53545700
 wfcr_addr = 0x52434657
 boiler_addr = 0x524C4F42
 
@@ -41,19 +41,19 @@ dobby = {}
 
 
 def create_cfg_files(filename):
-    if filename==FILENAME_WTS_CONF:
+    if 'wts-' in filename:
         wtsx = dict.fromkeys(wts_fieldnames)
+        wtsx[wts_fieldnames[0]] = filename.split('wts-')[1].split('.')[0] # WTSN
         wtsx[wts_fieldnames[1]] = 'OFFLINE' #STATE
         wtsx[wts_fieldnames[2]] = '0'       #TEMP
         wtsx[wts_fieldnames[3]] = 'NoName'  #NAME
         wtsx[wts_fieldnames[4]] = '0'       #CHECK
         wtsx[wts_fieldnames[5]] = '0'       #GPIO
-        for i in range(16):
-            wts.append(wtsx.copy())
-            wts[i][wts_fieldnames[0]] = str(i)
+
+        wts.append(wtsx.copy())
 
         with open(filename, 'w') as outfile:
-            json.dump(wts, outfile)
+            json.dump(wtsx, outfile)
 
     if filename == FILENAME_WF_CONF:
         wf = dict.fromkeys(wf_blr_fieldnames, '0')
@@ -79,18 +79,18 @@ def create_cfg_files(filename):
 def init_dobby():
     global DOBBY_TOKEN, dobby, admin_ID, tapo_pass, tapo_user, users_ID
     if os.path.isfile('dobby_login'):
-        with open('dobby_login', "r") as read_file:
-            for line in read_file:
+        with open('dobby_login', "r") as readfile:
+            for line in readfile:
                 line = line.strip()
                 if "tocken" in line:
                     DOBBY_TOKEN = line.split('=')[1]
                 if "admin_ID" in line:
                     admin_ID = int(line.split('=')[1])
                 if "tapo_user" in line:
-                    tapo_user = int(line.split('=')[1])
+                    tapo_user = line.split('=')[1]
                 if "tapo_pass" in line:
-                    tapo_pass = int(line.split('=')[1])
-            read_file.close()
+                    tapo_pass = line.split('=')[1]
+            readfile.close()
     else:
         return 'login not found'
 
@@ -113,6 +113,7 @@ def init():
             lines = readfile.readlines()
             for uid in lines:
                 users_ID.append(int(uid))
+            readfile.close()
     else:
         dbg.prints('WARNING! No such file:' + FILENAME_USERS_LIST)
         dbg.prints('Creating file...')
@@ -120,12 +121,10 @@ def init():
         idfile.writelines(str(admin_ID) + '\n')
         users_ID.append(admin_ID)
         idfile.close()
-    if os.path.isfile(FILENAME_WTS_CONF):
-        read_wts()
-    else:
-        dbg.prints('WARNING! No such file:' + FILENAME_WTS_CONF)
-        dbg.prints('Creating file...')
-        create_cfg_files(FILENAME_WTS_CONF)
+
+    for num in range(16):
+        if os.path.isfile(FILENAME_WTS_CONF.replace('#', str(num))):
+            wts.append(read_config(FILENAME_WTS_CONF.replace('#', str(num))))
 
     if os.path.isfile(FILENAME_WF_CONF):
         read_wf()
@@ -162,16 +161,16 @@ def read_dobby():
 
 # =====================  WTS =============================
 # --------------CONFIG------------
-# WTSN / STATE / TEMP / NAME / CHECK
+# STATE / TEMP / NAME / CHECK
 # --------------------------------
 
-def read_wts():
+def read_wts(wts_num):
     global wts
-    wts = read_config(FILENAME_WTS_CONF)
+    wts[wts_num].update(read_config(FILENAME_WTS_CONF.replace('#', wts[wts_num]['WTSN'])))
 
 
-def write_wts():
-    write_config(FILENAME_WTS_CONF, wts)
+def write_wts(wts_num):
+    write_config(FILENAME_WTS_CONF.replace('#', wts[wts_num]['WTSN']), wts[wts_num])
 
 
 def wts_checking_toggle(wts_num):
@@ -180,7 +179,7 @@ def wts_checking_toggle(wts_num):
     else:
         wts[wts_num][wts_fieldnames[4]] = '0'
 
-    write_wts()
+    write_wts(wts_num)
 
 
 def wts_checking_onoff(wts_num, onoff):
@@ -190,8 +189,12 @@ def wts_checking_onoff(wts_num, onoff):
         wts[wts_num][wts_fieldnames[4]] = '0'
     else:
         dbg.dbg.printss('wrong wts_check_onoff arg')
-    write_wts()
+    write_wts(wts_num)
 
+def get_wtsidx(wts_num):
+    for wtsn in wts:
+        if wtsn['WTSN'] == wts_num:
+            return wts.index(wtsn)
 
 # =====================  WF =============================
 # ------CONFIG-----------

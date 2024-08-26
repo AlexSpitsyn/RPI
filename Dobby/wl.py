@@ -137,59 +137,60 @@ def wl_rw(addr, cmd, var, val):
 				desc = parts[5]
 				dev_error_code = parts[6]
 			#END LIN
-		
+
 		dbg.prints('ADDR: ', addr)
 		dbg.prints('CMD STATE: ', WL_CMD_STATE[cmd_state])
 		dbg.prints('CMD: ', cmd)
 		dbg.prints('VAR: ', var)
 		dbg.prints('VAL: ', val)
 		dbg.prints('DESC: ', desc)
-		dbg.prints('DEV ERRROR CODE: ', dev_error_code)		
+		dbg.prints('DEV ERRROR CODE: ', dev_error_code)
 
-		
+
 		return WL_STATE[wl_send_code], WL_CMD_STATE[cmd_state], dev_error_code, val
-	
 
 
 
 
-	
-	
-#=====================  WTS =============================	
-	
+
+
+
+#=====================  WTS =============================
+
 WTS_VAR = {
 	'TEMP':'0',
 	't_updt_time':'2',
 	'GPIO': '1'
 }
 
-def send_to_wts(wtsn, cmd, var, val):
-	config.read_wts()
-	wl_send_state, cmd_state, dev_error_code, retval = wl_rw(config.wts_addr[wtsn], CMD[cmd], WTS_VAR[var], val)
+def send_to_wts(wts_num, cmd, var, val):
+	config.read_wts(wts_num)
+	wtsn = int(config.wts[wts_num]['WTSN'])
+	wl_send_state, cmd_state, dev_error_code, retval = wl_rw(config.wts_addr + wtsn, CMD[cmd], WTS_VAR[var], val)
 
-	config.wts[wtsn]["STATE"] = wl_send_state
+	config.wts[wts_num]["STATE"] = wl_send_state
 
 	if wl_send_state==WL_STATE[0]:#OK
 		if dev_error_code != '0':
 			dbg.prints('WARNING! DevERC: ' + str(dev_error_code))
-			config.wts[wtsn]["STATE"] = wl_send_state + '- DevERC:' + str(dev_error_code)
+			config.wts[wts_num]["STATE"] = wl_send_state + '- DevERC:' + str(dev_error_code)
 
 		if cmd_state=='DONE':
-			if var in config.wts[wtsn]:
+			if var in config.wts[wts_num]:
 				if var == 'TEMP':#convert to signet
 					t = int(retval)
 					t = (t + 2**7) % 2**8 - 2**7
 					retval = str(t)
-				config.wts[wtsn][var] = retval
-				dbg.prints('Write wts config! ', config.wts[wtsn])
+				config.wts[wts_num][var] = retval
+				dbg.prints('Write wts config! ', config.wts[wts_num])
 		else:
 			dbg.prints('WARNING! ', cmd_state)
-			config.wts[wtsn]['STATE'] =	 wl_send_state + '- cmd: ' + cmd_state
+			config.wts[wts_num]['STATE'] =	 wl_send_state + '- cmd: ' + cmd_state
 	# else:
 	# 	if var in config.wts[wtsn]:
 	# 		config.wts[wtsn][var] = '0'
 
-	config.write_wts()
+	config.write_wts(wts_num)
 	dbg.prints('WTS' + str(wtsn) + ':' + cmd_state)
 	return cmd_state, str(retval)
 
@@ -198,23 +199,21 @@ def read_wts(wts_num):
 	send_to_wts(wts_num, 'GET', 'GPIO', 0)
 
 def update_wts():
-	config.read_wts()
-	for wts_conf in config.wts:
-		if wts_conf["CHECK"] =='1':			
-			read_wts(int(wts_conf["WTSN"]))
-			read_wts(int(wts_conf["WTSN"]))
+	for i in range(len(config.wts)):
+		config.read_wts(i)
+		if config.wts[i]["CHECK"] =='1':
+			read_wts(i)
 
+def set_gpio_wts(wts_num, GPIO_VAL):
+	return send_to_wts(wts_num, 'SET', 'GPIO', GPIO_VAL)[0]
 
-def set_gpio_wts(wtsn, GPIO_VAL):
-	return send_to_wts(wtsn, 'SET', 'GPIO', GPIO_VAL)[0]
+def toggle_gpio_wts(wts_num):
+	config.read_wts(wts_num)
+	if config.wts[wts_num]['GPIO'] == '0':
+		return set_gpio_wts(wts_num, '1')
 
-def toggle_gpio_wts(wtsn):
-	config.read_wts()
-	if config.wts[wtsn]['GPIO'] == '0':
-		return set_gpio_wts(wtsn, '1')
-
-	elif config.wts[wtsn]['GPIO'] == '1':
-		return set_gpio_wts(wtsn, '0')
+	elif config.wts[wts_num]['GPIO'] == '1':
+		return set_gpio_wts(wts_num, '0')
 
 #=====================  WF ===============================
 #STATE / T_CTRL / TEMP / TEMP_SET

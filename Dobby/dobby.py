@@ -29,10 +29,10 @@ import subprocess
     #     print('stop wl_upate')
     #     t.cancel()
 
-def drow_wts_menu(idle=' '):
+def drow_wts_menu(wts_num, idle=' '):
     global gcall
-    global wts_num
-    config.read_wts()
+    #global wts_num
+    config.read_wts(wts_num)
     wts_check = config.wts[wts_num]["CHECK"]
     wts_name = config.wts[wts_num]["NAME"]
     wts_temp = config.wts[wts_num]["TEMP"]
@@ -45,26 +45,26 @@ def drow_wts_menu(idle=' '):
         button_wts_onoff_text = '⏹'  # not checked
 
     if wts_state == wl.WL_STATE[0]:  # 'OK'
-        header_str = 'Д' + str(wts_num + 1) + '  ' + wts_name + '  ' + wts_temp + '°C' + idle
+        header_str = f'Д{config.wts[wts_num]["WTSN"]} {wts_name} {wts_temp}°C{idle}'
         if wts_gpio == '1':
             button_gpio_text = 'OFF'
         else:
             button_gpio_text = 'ON'
 
     elif wts_state == wl.WL_STATE[4]:  # 'OFFLINE'
-        header_str = 'Д' + str(wts_num + 1) + '  ' + wts_name + ' OFFLINE' + idle
+        header_str = f'Д{config.wts[wts_num]["WTSN"]} {wts_name} OFFLINE{idle}'
         button_gpio_text = '⚠'
 
     else:
-        header_str = 'Д' + str(wts_num + 1) + '  ' + wts_state + idle
+        header_str = f'Д{config.wts[wts_num]["WTSN"]} {wts_state} {idle}'
         button_gpio_text = '⚠'
 
 
     wts_options_menu = types.InlineKeyboardMarkup()
-    key1 = types.InlineKeyboardButton(text='Имя', callback_data='set_wts_name')
-    key2 = types.InlineKeyboardButton(text=button_wts_onoff_text, callback_data='wts_onoff')
-    key3 = types.InlineKeyboardButton(text=button_gpio_text, callback_data='wts_gpio_toggle')
-    key4 = types.InlineKeyboardButton(text='🔄', callback_data='wts_update')
+    key1 = types.InlineKeyboardButton(text='Имя', callback_data=f'set_wts_name@{wts_num}')
+    key2 = types.InlineKeyboardButton(text=button_wts_onoff_text, callback_data=f'wts_onoff@{wts_num}')
+    key3 = types.InlineKeyboardButton(text=button_gpio_text, callback_data=f'wts_gpio_toggle@{wts_num}')
+    key4 = types.InlineKeyboardButton(text='🔄', callback_data=f'wts_update@{wts_num}')
 
     key_back.callback_data = 'wts_select'
     wts_options_menu.add(key1, key2, key3, key4)
@@ -200,7 +200,7 @@ def drow_pump_menu(idle=' '):
 config.init_dobby()
 config.init()
 
-bot = telebot.TeleBot(config.dobby['TOKEN'])
+bot = telebot.TeleBot(config.DOBBY_TOKEN)
 UPDATE_TIME = int(config.dobby['UPDATE_TIME'])
 dbg.DEBUG = config.dobby['DBG'] == 'ON'
 wl.EMULATION = config.dobby['EMULATION'] == 'ON'
@@ -238,7 +238,6 @@ def inline_key(msg):
     global gcall
     global set_dict
     global message_out_cnt
-    print (msg.from_user.id)
 
     if msg.from_user.id not in config.users_ID:
         bot.send_message(config.admin_ID, "New User: " + str(msg.from_user.id))
@@ -277,7 +276,8 @@ def inline_key(msg):
             bot.delete_message(msg.chat.id, msg.message_id)
 
         if msg.text == "/temp":
-            config.read_wts()
+            for i in range(len(config.wts)):
+                config.read_wts(i)
             config.read_wf()
             config.read_boiler()
 
@@ -307,13 +307,9 @@ def inline_key(msg):
             for wts_conf in config.wts:
                 if wts_conf["CHECK"] == '1':
                     if wts_conf['STATE'] == 'OK':
-                        tempinfo = tempinfo + 'Д' + str(int(wts_conf["WTSN"]) + 1) + ' - ' + wts_conf["NAME"] + ': ' + \
-                                   wts_conf[
-                                       "TEMP"] + '\r\n'
+                        tempinfo = tempinfo + f'Д{wts_conf["WTSN"]} - {wts_conf["NAME"]}: {wts_conf["TEMP"]}\r\n'
                     else:
-                        tempinfo = tempinfo + 'Д' + str(int(wts_conf["WTSN"]) + 1) + ' - ' + wts_conf["NAME"] + ': ' + \
-                                   wts_conf[
-                                       "STATE"] + '\r\n'
+                        tempinfo = tempinfo + f'Д{wts_conf["WTSN"]} - {wts_conf["NAME"]}: {wts_conf["STATE"]}\r\n'
             bot.send_message(msg.chat.id, tempinfo)
             message_out_cnt += 1
 
@@ -354,7 +350,7 @@ def inline_key(msg):
 
                 # msg=bot.send_message(msg.chat.id, 'Имя для Д1 - '+ wts_name )
                 # bot.edit_message_text(get_WTS_state(wts_num), message_out.chat.id, message_out.message_id, reply_markup=markup)
-                drow_wts_menu()
+                drow_wts_menu(wts_num)
                 #while message_out_cnt:
                 #    bot.delete_message(msg.chat.id, msg.message_id + 1 - message_out_cnt)
                 #    message_out_cnt -= 1
@@ -517,10 +513,10 @@ def callback_inline(call):
         for wts_conf in config.wts:
             if wts_conf["CHECK"] == '1':
                 if wts_conf['STATE'] == 'OK':
-                    tempinfo = tempinfo + 'Д' + str(int(wts_conf["WTSN"])+1) + ' - ' + wts_conf["NAME"] + ': ' + wts_conf[
+                    tempinfo = tempinfo + 'Д' + str(int(wts_conf["WTSN"])) + ' - ' + wts_conf["NAME"] + ': ' + wts_conf[
                         "TEMP"] + '\r\n'
                 else:
-                    tempinfo = tempinfo + 'Д' + str(int(wts_conf["WTSN"])+1) + ' - ' + wts_conf["NAME"] + ': ' + wts_conf[
+                    tempinfo = tempinfo + 'Д' + str(int(wts_conf["WTSN"])) + ' - ' + wts_conf["NAME"] + ': ' + wts_conf[
                         "STATE"] + '\r\n'
 
         bot.send_message(call.message.chat.id, tempinfo)
@@ -533,62 +529,62 @@ def callback_inline(call):
 
     elif call.data == "wts_select":
         wts_select_menu = types.InlineKeyboardMarkup()
-        key1 = types.InlineKeyboardButton(text='Д1', callback_data='wts_options@1')
-        key2 = types.InlineKeyboardButton(text='Д2', callback_data='wts_options@2')
-        key3 = types.InlineKeyboardButton(text='Д3', callback_data='wts_options@3')
-        key4 = types.InlineKeyboardButton(text='Д4', callback_data='wts_options@4')
-        key5 = types.InlineKeyboardButton(text='Д5', callback_data='wts_options@5')
-        key6 = types.InlineKeyboardButton(text='Д6', callback_data='wts_options@6')
-        key7 = types.InlineKeyboardButton(text='Д7', callback_data='wts_options@7')
-        key8 = types.InlineKeyboardButton(text='Д8', callback_data='wts_options@8')
-        key9 = types.InlineKeyboardButton(text='Д9', callback_data='wts_options@9')
-        key10 = types.InlineKeyboardButton(text='Д10', callback_data='wts_options@10')
-        key11 = types.InlineKeyboardButton(text='Д11', callback_data='wts_options@11')
-        key12 = types.InlineKeyboardButton(text='Д12', callback_data='wts_options@12')
-        key13 = types.InlineKeyboardButton(text='Д13', callback_data='wts_options@13')
-        key14 = types.InlineKeyboardButton(text='Д14', callback_data='wts_options@14')
-        key15 = types.InlineKeyboardButton(text='Д15', callback_data='wts_options@15')
-        key16 = types.InlineKeyboardButton(text='Д16', callback_data='wts_options@16')
+        keys = []
+        for wts_conf in config.wts:
+            keys.append(types.InlineKeyboardButton(text=f'Д{wts_conf["WTSN"]}', callback_data=f'wts_options@{config.wts.index(wts_conf)}'))
 
+        add_wts = types.InlineKeyboardButton(text='добавить', callback_data='add_wts')
         key_back.callback_data = 'temp'
-        wts_select_menu.row(key1, key2, key3, key4)
-        wts_select_menu.row(key5, key6, key7, key8)
-        wts_select_menu.row(key9, key10, key11, key12)
-        wts_select_menu.row(key13, key14, key15, key16)
+
+        p = 0
+        for i in range(len(config.wts)//4):
+            wts_select_menu.row(*keys[i*p:p+4])
+            p+=4
+        if len(config.wts) - p:
+            wts_select_menu.row(*keys[p:])
+
+        wts_select_menu.row(add_wts)
         wts_select_menu.row(key_back, key_home)
         bot.edit_message_text('Настройки датчиков', call.message.chat.id, call.message.message_id,
                               reply_markup=wts_select_menu)
-
 
     # ------------------------------------------------------------------------------------
     #              TEMPERATURE -> OPTIONS -> WTS SELECT -> WTS COMFIG
     # ------------------------------------------------------------------------------------
 
-    elif call.data.split('@')[0] == "wts_options":
-        wts_num = int(call.data.split('@')[1]) - 1
+    elif "wts_options" in call.data:
+        wts_num = int(call.data.split('@')[1])
         key_back.callback_data = 'wts_select'
-        drow_wts_menu()
+        drow_wts_menu(wts_num)
 
-    elif call.data == "wts_onoff":
+    elif "wts_onoff" in call.data:
+        wts_num = int(call.data.split('@')[1])
         config.wts_checking_toggle(wts_num)
-        drow_wts_menu()
+        drow_wts_menu(wts_num)
 
-    elif call.data == "wts_gpio_toggle":
-        drow_wts_menu("⏳")
+    elif "wts_gpio_toggle" in call.data:
+        wts_num = int(call.data.split('@')[1])
+        drow_wts_menu(wts_num,"⏳")
         wl.toggle_gpio_wts(wts_num)
-        drow_wts_menu()
+        drow_wts_menu(wts_num)
 
-    elif call.data == "wts_update":
-        drow_wts_menu("⏳")
+    elif "wts_update" in call.data:
+        wts_num = int(call.data.split('@')[1])
+        drow_wts_menu(wts_num,"⏳")
         #config.wts_checking_onoff(wts_num, 'on')  # turn wts ON
         wl.read_wts(wts_num)
-        drow_wts_menu()
+        drow_wts_menu(wts_num)
 
-    elif call.data == "set_wts_name":
+    elif "set_wts_name" in call.data:
         input_str_type = 'wts_name';
         bot.send_message(call.message.chat.id, "Напишите название датчика\n Имя должно начинаться с #")
         message_out_cnt += 1
 
+    elif call.data == "add_wts":
+        key_back.callback_data = 'wts_select'
+
+    elif call.data == "rm_wts":
+        key_back.callback_data = 'wts_select'
 
     # ------------------------------------------------------------------------------------
     #                           HEAT SELECT -> BOILER OPTIONS
@@ -721,7 +717,7 @@ if os.path.isfile('update/update_state'):
 #wl_update()
 
 f = subprocess.run('date', stdout=subprocess.PIPE)
-bot.send_message(config.Alex_ID, f.stdout)
+bot.send_message(config.admin_ID, f.stdout)
 #bot.send_message(config.Alex_ID, "привет")
 
 bot.polling(none_stop=True, interval=3, timeout=60)
