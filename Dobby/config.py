@@ -28,7 +28,7 @@ wts_fieldnames = ['WTSN', 'STATE', 'TEMP', 'NAME', 'CHECK', 'GPIO']
 wf_blr_fieldnames = ['STATE', 'T_CTRL', 'TEMP', 'TEMP_SET']
 pump_fieldnames = ['STATE', 'PUMP_1_1_SW', 'PUMP_1_2_SW', 'PUMP_2_1_SW', 'PUMP_2_2_SW', 'PUMP_1_1_ST', 'PUMP_1_2_ST',
                    'PUMP_2_1_ST', 'PUMP_2_2_ST']  # numeration must be like in wl.py BOILER_VAR
-dobby_fieldnames = ['OS', 'DBG', 'LOG', 'EMULATION', 'UPDATE_TIME', 'TOKEN']
+dobby_fieldnames = ['OS', 'DBG', 'LOG', 'EMULATION', 'UPDATE_TIME']
 
 temp = {'WF_MIN': 20, 'WF_MAX': 50, 'BOILER_MIN': 10, 'BOILER_MAX': 65}
 
@@ -99,11 +99,13 @@ def init_dobby():
     else:
         dbg.prints('WARNING! No such file:' + FILENAME_DOBBY_CONF)
         dobby = dict.fromkeys(dobby_fieldnames)
-        dobby[dobby_fieldnames[0]] = 'WIN'
+        dobby[dobby_fieldnames[0]] = 'LIN'
         dobby[dobby_fieldnames[1]] = 'OFF'
         dobby[dobby_fieldnames[2]] = 'OFF'
         dobby[dobby_fieldnames[3]] = 'OFF'
         dobby[dobby_fieldnames[4]] = '1000'
+        with open(FILENAME_DOBBY_CONF, 'w') as outfile:
+            json.dump(dobby, outfile)
 
     return 'OK'
 
