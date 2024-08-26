@@ -26,10 +26,11 @@ boiler_addr = 0x524C4F42
 
 wts_fieldnames = ['WTSN', 'STATE', 'TEMP', 'NAME', 'CHECK', 'GPIO']
 wf_blr_fieldnames = ['STATE', 'T_CTRL', 'TEMP', 'TEMP_SET']
-pump_fieldnames = ['STATE','PUMP_1_1_SW', 'PUMP_1_2_SW', 'PUMP_2_1_SW', 'PUMP_2_2_SW','PUMP_1_1_ST', 'PUMP_1_2_ST', 'PUMP_2_1_ST', 'PUMP_2_2_ST']  # numeration must be like in wl.py BOILER_VAR
-dobby_fieldnames = ['OS','DBG', 'LOG', 'EMULATION', 'UPDATE_TIME', 'TOKEN']
+pump_fieldnames = ['STATE', 'PUMP_1_1_SW', 'PUMP_1_2_SW', 'PUMP_2_1_SW', 'PUMP_2_2_SW', 'PUMP_1_1_ST', 'PUMP_1_2_ST',
+                   'PUMP_2_1_ST', 'PUMP_2_2_ST']  # numeration must be like in wl.py BOILER_VAR
+dobby_fieldnames = ['OS', 'DBG', 'LOG', 'EMULATION', 'UPDATE_TIME', 'TOKEN']
 
-temp= {'WF_MIN':20, 'WF_MAX': 50, 'BOILER_MIN': 10, 'BOILER_MAX': 65}
+temp = {'WF_MIN': 20, 'WF_MAX': 50, 'BOILER_MIN': 10, 'BOILER_MAX': 65}
 
 wts = []
 wf = {}
@@ -38,17 +39,15 @@ pump = {}
 dobby = {}
 
 
-
-
 def create_cfg_files(filename):
     if 'wts-' in filename:
         wtsx = dict.fromkeys(wts_fieldnames)
-        wtsx[wts_fieldnames[0]] = filename.split('wts-')[1].split('.')[0] # WTSN
-        wtsx[wts_fieldnames[1]] = 'OFFLINE' #STATE
-        wtsx[wts_fieldnames[2]] = '0'       #TEMP
-        wtsx[wts_fieldnames[3]] = 'NoName'  #NAME
-        wtsx[wts_fieldnames[4]] = '0'       #CHECK
-        wtsx[wts_fieldnames[5]] = '0'       #GPIO
+        wtsx[wts_fieldnames[0]] = filename.split('wts-')[1].split('.')[0]  # WTSN
+        wtsx[wts_fieldnames[1]] = 'OFFLINE'  # STATE
+        wtsx[wts_fieldnames[2]] = '0'  # TEMP
+        wtsx[wts_fieldnames[3]] = 'NoName'  # NAME
+        wtsx[wts_fieldnames[4]] = '0'  # CHECK
+        wtsx[wts_fieldnames[5]] = '0'  # GPIO
 
         wts.append(wtsx.copy())
 
@@ -61,20 +60,21 @@ def create_cfg_files(filename):
         with open(filename, 'w') as outfile:
             json.dump(wf, outfile)
 
-    if filename==FILENAME_BOILER_CONF:
+    if filename == FILENAME_BOILER_CONF:
         boiler = dict.fromkeys(wf_blr_fieldnames, '0')
 
         with open(filename, 'w') as outfile:
             json.dump(boiler, outfile)
 
-    if filename==FILENAME_PUMP_CONF:
+    if filename == FILENAME_PUMP_CONF:
         pump = dict.fromkeys(pump_fieldnames, '0')
-        pump['STATE']= 'OFFLINE'
+        pump['STATE'] = 'OFFLINE'
 
         with open(filename, 'w') as outfile:
             json.dump(pump, outfile)
 
     outfile.close()
+
 
 def init_dobby():
     global DOBBY_TOKEN, dobby, admin_ID, tapo_pass, tapo_user, users_ID
@@ -97,15 +97,16 @@ def init_dobby():
     if os.path.isfile(FILENAME_DOBBY_CONF):
         read_dobby()
     else:
-        dbg.prints('WARNING! No such file:'+ FILENAME_DOBBY_CONF)
+        dbg.prints('WARNING! No such file:' + FILENAME_DOBBY_CONF)
         dobby = dict.fromkeys(dobby_fieldnames)
-        dobby[dobby_fieldnames[0]]='WIN'
-        dobby[dobby_fieldnames[1]]='OFF'
+        dobby[dobby_fieldnames[0]] = 'WIN'
+        dobby[dobby_fieldnames[1]] = 'OFF'
         dobby[dobby_fieldnames[2]] = 'OFF'
         dobby[dobby_fieldnames[3]] = 'OFF'
         dobby[dobby_fieldnames[4]] = '1000'
 
     return 'OK'
+
 
 def init():
     if os.path.isfile(FILENAME_USERS_LIST):
@@ -147,6 +148,7 @@ def init():
         dbg.prints('Creating file...')
         create_cfg_files(FILENAME_PUMP_CONF)
 
+
 # =====================  PASS ID =============================
 
 def write_pass_list(lst):
@@ -154,10 +156,11 @@ def write_pass_list(lst):
         for uid in lst:
             wfile.writelines(str(uid) + '\n')
 
-# =====================  DOBBY =============================
 
+# =====================  DOBBY =============================
 def read_dobby():
     dobby.update(read_config(FILENAME_DOBBY_CONF))
+
 
 # =====================  WTS =============================
 # --------------CONFIG------------
@@ -191,10 +194,12 @@ def wts_checking_onoff(wts_num, onoff):
         dbg.dbg.printss('wrong wts_check_onoff arg')
     write_wts(wts_num)
 
+
 def get_wtsidx(wts_num):
     for wtsn in wts:
         if wtsn['WTSN'] == wts_num:
             return wts.index(wtsn)
+
 
 # =====================  WF =============================
 # ------CONFIG-----------
@@ -212,7 +217,6 @@ def write_wf():
 # ------CONFIG-----------
 # STATE / T_CTRL / TEMP / TEMP_SET
 # -----------------------
-
 def read_boiler():
     boiler.update(read_config(FILENAME_BOILER_CONF))
 

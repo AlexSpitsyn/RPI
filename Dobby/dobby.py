@@ -11,27 +11,28 @@ import time
 import ds18b20
 import subprocess
 
-#wl_update_f=True
-#======================================================================================================
+
+# wl_update_f=True
+# ======================================================================================================
 #
 #                                       FUNCTION DEF
 #
-#======================================================================================================
-#def wl_update():
-    #t=Timer(UPDATE_TIME, wl_update)
-    #t.start()
-    # wl.update_wf()
-    # wl.update_boiler()
-    # wl.update_wts()
-    # wl.get_pump()
-    # print('update wl')
-    # if wl_update_f==False:
-    #     print('stop wl_upate')
-    #     t.cancel()
+# ======================================================================================================
+# def wl_update():
+# t=Timer(UPDATE_TIME, wl_update)
+# t.start()
+# wl.update_wf()
+# wl.update_boiler()
+# wl.update_wts()
+# wl.get_pump()
+# print('update wl')
+# if wl_update_f==False:
+#     print('stop wl_upate')
+#     t.cancel()
 
 def drow_wts_menu(wts_num, idle=' '):
     global gcall
-    #global wts_num
+    # global wts_num
     config.read_wts(wts_num)
     wts_check = config.wts[wts_num]["CHECK"]
     wts_name = config.wts[wts_num]["NAME"]
@@ -58,7 +59,6 @@ def drow_wts_menu(wts_num, idle=' '):
     else:
         header_str = f'Д{config.wts[wts_num]["WTSN"]} {wts_state} {idle}'
         button_gpio_text = '⚠'
-
 
     wts_options_menu = types.InlineKeyboardMarkup()
     key1 = types.InlineKeyboardButton(text='Имя', callback_data=f'set_wts_name@{wts_num}')
@@ -150,15 +150,17 @@ def drow_wf_menu(idle=' '):
     markup = wf_options_menu
     message_out = bot.edit_message_text(header_str, gcall.message.chat.id, gcall.message.message_id,
                                         reply_markup=markup)
+
+
 def drow_pump_menu(idle=' '):
     global gcall
     config.read_pump()
     state = config.pump['STATE']
-    button_pump =['00','00','00','00']
-    button_pump_char={'10':'🛑','00':'Ⓜ','11':'⚠','01':'✅'}
+    button_pump = ['00', '00', '00', '00']
+    button_pump_char = {'10': '🛑', '00': 'Ⓜ', '11': '⚠', '01': '✅'}
     for x in range(4):
-         button_pump[x] = config.pump[config.pump_fieldnames[x+5]] + config.pump[config.pump_fieldnames[x+1]]
-         #PUMP_X_X_ST + PUMP_X_X_SW
+        button_pump[x] = config.pump[config.pump_fieldnames[x + 5]] + config.pump[config.pump_fieldnames[x + 1]]
+        # PUMP_X_X_ST + PUMP_X_X_SW
 
     if state == wl.WL_STATE[0]:  # 'OK'
         header_str = 'Насосы ' + idle
@@ -167,15 +169,17 @@ def drow_pump_menu(idle=' '):
     else:
         header_str = 'Насосы ' + state + idle
 
-
-
     pumps_menu = types.InlineKeyboardMarkup()
     # key1 = types.InlineKeyboardButton(text=button5_text + '    ДОМ', callback_data='pump_toggle@PUMP_MAIN')
     # key2 = types.InlineKeyboardButton(text=button6_text + '    ХБ', callback_data='pump_toggle@PUMP_HB')
-    key3 = types.InlineKeyboardButton(text=button_pump_char[button_pump[0]] + '  Кухня-гост', callback_data='pump_toggle@' + config.pump_fieldnames[1])
-    key4 = types.InlineKeyboardButton(text=button_pump_char[button_pump[1]]  + '  Прихожая-сп.гост', callback_data='pump_toggle@' + config.pump_fieldnames[2])
-    key5 = types.InlineKeyboardButton(text=button_pump_char[button_pump[2]]  + '  Спальная 2.1 -2.2.', callback_data='pump_toggle@' + config.pump_fieldnames[3])
-    key6 = types.InlineKeyboardButton(text=button_pump_char[button_pump[3]]  + '  Спальная 2.3 -2.4.', callback_data='pump_toggle@' + config.pump_fieldnames[4])
+    key3 = types.InlineKeyboardButton(text=button_pump_char[button_pump[0]] + '  Кухня-гост',
+                                      callback_data='pump_toggle@' + config.pump_fieldnames[1])
+    key4 = types.InlineKeyboardButton(text=button_pump_char[button_pump[1]] + '  Прихожая-сп.гост',
+                                      callback_data='pump_toggle@' + config.pump_fieldnames[2])
+    key5 = types.InlineKeyboardButton(text=button_pump_char[button_pump[2]] + '  Спальная 2.1 -2.2.',
+                                      callback_data='pump_toggle@' + config.pump_fieldnames[3])
+    key6 = types.InlineKeyboardButton(text=button_pump_char[button_pump[3]] + '  Спальная 2.3 -2.4.',
+                                      callback_data='pump_toggle@' + config.pump_fieldnames[4])
     key7 = types.InlineKeyboardButton(text='🔄', callback_data='pump_update')
 
     key_back.callback_data = 'heat_select'
@@ -189,13 +193,15 @@ def drow_pump_menu(idle=' '):
     pumps_menu.row(key_back, key_home)
 
     markup = pumps_menu
-    message_out = bot.edit_message_text(header_str, gcall.message.chat.id, gcall.message.message_id, reply_markup=markup)
+    message_out = bot.edit_message_text(header_str, gcall.message.chat.id, gcall.message.message_id,
+                                        reply_markup=markup)
 
-#======================================================================================================
+
+# ======================================================================================================
 #
 #                                           MAIN
 #
-#======================================================================================================
+# ======================================================================================================
 
 config.init_dobby()
 config.init()
@@ -254,14 +260,13 @@ def inline_key(msg):
                 bot.send_message(config.admin_ID, 'wrong command')
                 bot.send_message(config.admin_ID, 'add user xxx')
 
-
-# telegram commands
-#menu - start menu
-#temp - temperature info
-#boiler - boiler settings
-#wf - wf settings
-#pumps - pumps settings
-#help - help
+        # telegram commands
+        # menu - start menu
+        # temp - temperature info
+        # boiler - boiler settings
+        # wf - wf settings
+        # pumps - pumps settings
+        # help - help
         if msg.text == "/menu":
             input_str_type = '0'
             mainmenu = types.InlineKeyboardMarkup()
@@ -289,7 +294,7 @@ def inline_key(msg):
                     tempinfo = tempinfo + 'OFF '
                 tempinfo = tempinfo + config.boiler['TEMP'] + '\r\n'
             else:
-                tempinfo = tempinfo  + config.boiler['STATE'] + '\r\n'
+                tempinfo = tempinfo + config.boiler['STATE'] + '\r\n'
 
             tempinfo = tempinfo + 'ТП: '
             if config.wf['STATE'] == 'OK':
@@ -323,18 +328,16 @@ def inline_key(msg):
         if msg.text.split()[0] == "rad":
             wl.toggle_gpio_wts(7)
             bot.send_message(msg.chat.id, 'Файл не найден')
-            wts_conf['STATE'] == 'OK':
-
+            wts_conf['STATE'] == 'OK'
 
         if msg.text == "reboot":
-            bot.send_message(msg.chat.id,'Добби ушёл...')
+            bot.send_message(msg.chat.id, 'Добби ушёл...')
             time.sleep(10)
             os.system('shutdown -r now')
 
         if msg.text.split()[0] == "call":
             f = subprocess.run(msg.text[5:].split(), stdout=subprocess.PIPE)
-            bot.send_message(msg.chat.id,f.stdout)
-
+            bot.send_message(msg.chat.id, f.stdout)
 
         if msg.text == "clear log":
             f = open('log/clear', 'w')
@@ -351,7 +354,7 @@ def inline_key(msg):
                 # msg=bot.send_message(msg.chat.id, 'Имя для Д1 - '+ wts_name )
                 # bot.edit_message_text(get_WTS_state(wts_num), message_out.chat.id, message_out.message_id, reply_markup=markup)
                 drow_wts_menu(wts_num)
-                #while message_out_cnt:
+                # while message_out_cnt:
                 #    bot.delete_message(msg.chat.id, msg.message_id + 1 - message_out_cnt)
                 #    message_out_cnt -= 1
             else:
@@ -359,7 +362,6 @@ def inline_key(msg):
                 message_out_cnt += 1
 
             # print(message_out_cnt)
-
 
         if input_str_type.split('@')[0] == 'set_temp':
             temp_type = input_str_type.split('@')[1]
@@ -376,7 +378,7 @@ def inline_key(msg):
                             drow_boiler_menu()
 
                         input_str_type = '0'
-                        #while message_out_cnt:
+                        # while message_out_cnt:
                         #    bot.delete_message(msg.chat.id, msg.message_id + 1 - message_out_cnt)
                         #    message_out_cnt -= 1
 
@@ -396,7 +398,7 @@ def inline_key(msg):
                             drow_wf_menu()
 
                         input_str_type = '0'
-                        #while message_out_cnt:
+                        # while message_out_cnt:
                         #    bot.delete_message(msg.chat.id, msg.message_id + 1 - message_out_cnt)
                         #    message_out_cnt -= 1
 
@@ -531,15 +533,16 @@ def callback_inline(call):
         wts_select_menu = types.InlineKeyboardMarkup()
         keys = []
         for wts_conf in config.wts:
-            keys.append(types.InlineKeyboardButton(text=f'Д{wts_conf["WTSN"]}', callback_data=f'wts_options@{config.wts.index(wts_conf)}'))
+            keys.append(types.InlineKeyboardButton(text=f'Д{wts_conf["WTSN"]}',
+                                                   callback_data=f'wts_options@{config.wts.index(wts_conf)}'))
 
         add_wts = types.InlineKeyboardButton(text='добавить', callback_data='add_wts')
         key_back.callback_data = 'temp'
 
         p = 0
-        for i in range(len(config.wts)//4):
-            wts_select_menu.row(*keys[i*p:p+4])
-            p+=4
+        for i in range(len(config.wts) // 4):
+            wts_select_menu.row(*keys[i * p:p + 4])
+            p += 4
         if len(config.wts) - p:
             wts_select_menu.row(*keys[p:])
 
@@ -564,14 +567,14 @@ def callback_inline(call):
 
     elif "wts_gpio_toggle" in call.data:
         wts_num = int(call.data.split('@')[1])
-        drow_wts_menu(wts_num,"⏳")
+        drow_wts_menu(wts_num, "⏳")
         wl.toggle_gpio_wts(wts_num)
         drow_wts_menu(wts_num)
 
     elif "wts_update" in call.data:
         wts_num = int(call.data.split('@')[1])
-        drow_wts_menu(wts_num,"⏳")
-        #config.wts_checking_onoff(wts_num, 'on')  # turn wts ON
+        drow_wts_menu(wts_num, "⏳")
+        # config.wts_checking_onoff(wts_num, 'on')  # turn wts ON
         wl.read_wts(wts_num)
         drow_wts_menu(wts_num)
 
@@ -647,7 +650,6 @@ def callback_inline(call):
         wl.get_pump()
         drow_pump_menu()
 
-
     # ------------------------------------------------------------------------------------
     #                               PARNIC OPTIONS
     # ------------------------------------------------------------------------------------
@@ -714,11 +716,9 @@ if os.path.isfile('update/update_state'):
         update_state.close()
     bot.send_message(config.Alex_ID, "DOBBY UPDATE: " + update_state_str)
     os.remove('update/update_state')
-#wl_update()
 
 f = subprocess.run('date', stdout=subprocess.PIPE)
 bot.send_message(config.admin_ID, f.stdout)
-#bot.send_message(config.Alex_ID, "привет")
 
 bot.polling(none_stop=True, interval=3, timeout=60)
 # while True: # Don't let the main Thread end.
