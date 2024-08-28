@@ -40,20 +40,6 @@ dobby = {}
 
 
 def create_cfg_files(filename):
-    if 'wts-' in filename:
-        wtsx = dict.fromkeys(wts_fieldnames)
-        wtsx[wts_fieldnames[0]] = filename.split('wts-')[1].split('.')[0]  # WTSN
-        wtsx[wts_fieldnames[1]] = 'OFFLINE'  # STATE
-        wtsx[wts_fieldnames[2]] = '0'  # TEMP
-        wtsx[wts_fieldnames[3]] = 'NoName'  # NAME
-        wtsx[wts_fieldnames[4]] = '0'  # CHECK
-        wtsx[wts_fieldnames[5]] = '0'  # GPIO
-
-        wts.append(wtsx.copy())
-
-        with open(filename, 'w') as outfile:
-            json.dump(wtsx, outfile)
-
     if filename == FILENAME_WF_CONF:
         wf = dict.fromkeys(wf_blr_fieldnames, '0')
 
@@ -180,9 +166,27 @@ def write_wts(wts_num):
 
 def get_wtsidx(wts_num):
     for wtsn in wts:
-        if wtsn['WTSN'] == wts_num:
+        if wtsn['WTSN'] == str(wts_num):
             return wts.index(wtsn)
 
+def delete_wts(wts_num):
+    os.remove(FILENAME_WTS_CONF.replace('#', wts[wts_num]['WTSN']))
+    wts.pop(wts_num)
+
+def add_wts(wts_num):
+    WTSN = f'{wts_num}'
+    wtsx = dict.fromkeys(wts_fieldnames)
+    wtsx[wts_fieldnames[0]] = WTSN  # WTSN
+    wtsx[wts_fieldnames[1]] = 'OFFLINE'  # STATE
+    wtsx[wts_fieldnames[2]] = '0'  # TEMP
+    wtsx[wts_fieldnames[3]] = 'No_Name' # NAME
+    wtsx[wts_fieldnames[4]] = '0'  # GPIO
+
+    wts.append(wtsx.copy())
+
+    with open(FILENAME_WTS_CONF.replace('#', WTSN), 'w') as outfile:
+        json.dump(wtsx, outfile)
+        outfile.close()
 
 # =====================  WF =============================
 # ------CONFIG-----------
