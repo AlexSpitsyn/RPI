@@ -42,16 +42,16 @@ WL_STATE = {
 }
 
 def wl_rw(addr, cmd, var, val):
-    wl_send_code = 0
-    d = ''
-    l = ''
-    # addr = 0
-    cmd_state = 1
-    # cmd = 2
-    # var = 3
-    # val = 4
-    desc = 5
-    dev_error_code = 6
+#    wl_send_code = 0
+#    d = ''
+#    l = ''
+#    # addr = 0
+#    cmd_state = 1
+#    # cmd = 2
+#    # var = 3
+#    # val = 4
+#    desc = 5
+#    dev_error_code = 6
 
     dbg.prints('\r\nSend Packet to:', hex(addr))
     dbg.prints('CMD:', cmd)
@@ -64,14 +64,28 @@ def wl_rw(addr, cmd, var, val):
         # ADDR;STATE;CMD;VAR;VAL;DESC;ERROR_CODE
         return 'OK', 'DONE', '0', '0'
     else:
+        # OS WINDOWS (use serial port to packet via WTS)
         if config.dobby['OS'] == 'WIN':
             wl_send_code, addr, cmd_state, cmd, var, val, desc, dev_error_code = serial_port.send_sPort(
                 str(hex(addr)) + ' ' + str(cmd) + ' ' + str(var) + ' ' + str(val))
+
+            dbg.prints('ADDR: ', hex(addr))
+            dbg.prints('CMD STATE: ', WL_CMD_STATE[cmd_state])
+            dbg.prints('CMD: ', cmd)
+            dbg.prints('VAR: ', var)
+            dbg.prints('VAL: ', val)
+            dbg.prints('DESC: ', desc)
+            dbg.prints('DEV ERRROR CODE: ', dev_error_code)
         else:
+        # OS LINUX
             if DEBUG_SX1278:
                 d = '-d'
+            else:
+                d = ''
             if LOG_SX1278:
                 l = '-l'
+            else:
+                l = ''
             dbg.prints('Sending...')
             # --------------------------------------
             # check if another treed use wl_send_cmd
@@ -115,7 +129,6 @@ def wl_rw(addr, cmd, var, val):
 
             if wl_send_code == 0:  # WL_OK
                 dbg.prints("=====PACKET RECIEVED=====")
-                dbg.prints("WL PACK STATE: ", wl_send_code, ' / ' + WL_STATE[wl_send_code])
 
                 # ADDR;STATE;CMD;VAR;VAL;DESC;ERROR_CODE
                 parts = wl_send_ret_str.split(';')
@@ -126,15 +139,26 @@ def wl_rw(addr, cmd, var, val):
                 val = parts[4]
                 desc = parts[5]
                 dev_error_code = parts[6]
+
+                dbg.prints(f'wl_send_cmd CODE/STATE: {wl_send_code}/{WL_STATE[wl_send_code]}')
+                dbg.prints(f'ADDR: {addr}')
+                dbg.prints(f'CMD CODE/STATE: {cmd_state}/{WL_CMD_STATE[cmd_state]}')
+                dbg.prints(f'CMD: ', cmd)
+                dbg.prints(f'VAR: ', var)
+                dbg.prints(f'VAL: ', val)
+                dbg.prints(f'DESC: ', desc)
+                dbg.prints(f'DEV ERRROR CODE: ', dev_error_code)
+            else:
+                dbg.prints("===== TIMEOUT =====")
+                dbg.prints(f'wl_send_cmd CODE/STATE: {wl_send_code}/{WL_STATE[wl_send_code]}')
+                wl_send_code = 4 #OFFLINE
+                cmd_state = 4 #ERROR
+                dev_error_code = 0
+                val = 0
+
         # END LIN
 
-        dbg.prints('ADDR: ', addr)
-        dbg.prints('CMD STATE: ', WL_CMD_STATE[cmd_state])
-        dbg.prints('CMD: ', cmd)
-        dbg.prints('VAR: ', var)
-        dbg.prints('VAL: ', val)
-        dbg.prints('DESC: ', desc)
-        dbg.prints('DEV ERRROR CODE: ', dev_error_code)
+
 
         return WL_STATE[wl_send_code], WL_CMD_STATE[cmd_state], dev_error_code, val
 
