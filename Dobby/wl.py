@@ -182,8 +182,7 @@ def read_wts(wts_num):
 def update_wts():
     for i in range(len(config.wts)):
         config.read_wts(i)
-        if config.wts[i]["CHECK"] == '1':
-            read_wts(i)
+        read_wts(i)
 
 def set_gpio_wts(wts_num, GPIO_VAL):
     return send_to_wts(wts_num, 'SET', 'GPIO', GPIO_VAL)[0]

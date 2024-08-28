@@ -24,7 +24,7 @@ wts_addr = 0x53545700
 wfcr_addr = 0x52434657
 boiler_addr = 0x524C4F42
 
-wts_fieldnames = ['WTSN', 'STATE', 'TEMP', 'NAME', 'CHECK', 'GPIO']
+wts_fieldnames = ['WTSN', 'STATE', 'TEMP', 'NAME', 'GPIO']
 wf_blr_fieldnames = ['STATE', 'T_CTRL', 'TEMP', 'TEMP_SET']
 pump_fieldnames = ['STATE', 'PUMP_1_1_SW', 'PUMP_1_2_SW', 'PUMP_2_1_SW', 'PUMP_2_2_SW', 'PUMP_1_1_ST', 'PUMP_1_2_ST',
                    'PUMP_2_1_ST', 'PUMP_2_2_ST']  # numeration must be like in wl.py BOILER_VAR
@@ -166,7 +166,7 @@ def read_dobby():
 
 # =====================  WTS =============================
 # --------------CONFIG------------
-# STATE / TEMP / NAME / CHECK
+# STATE / TEMP / NAME / GPIO
 # --------------------------------
 
 def read_wts(wts_num):
@@ -176,25 +176,6 @@ def read_wts(wts_num):
 
 def write_wts(wts_num):
     write_config(FILENAME_WTS_CONF.replace('#', wts[wts_num]['WTSN']), wts[wts_num])
-
-
-def wts_checking_toggle(wts_num):
-    if wts[wts_num][wts_fieldnames[4]] == '0':
-        wts[wts_num][wts_fieldnames[4]] = '1'
-    else:
-        wts[wts_num][wts_fieldnames[4]] = '0'
-
-    write_wts(wts_num)
-
-
-def wts_checking_onoff(wts_num, onoff):
-    if onoff == 'on':
-        wts[wts_num][wts_fieldnames[4]] = '1'
-    elif onoff == 'off':
-        wts[wts_num][wts_fieldnames[4]] = '0'
-    else:
-        dbg.prints('wrong wts_check_onoff arg')
-    write_wts(wts_num)
 
 
 def get_wtsidx(wts_num):
@@ -210,10 +191,8 @@ def get_wtsidx(wts_num):
 def read_wf():
     wf.update(read_config(FILENAME_WF_CONF))
 
-
 def write_wf():
     write_config(FILENAME_WF_CONF, wf)
-
 
 # =====================  BOILER =============================
 # ------CONFIG-----------
@@ -248,7 +227,6 @@ def read_config(filename):
 
     except IOError:
         dbg.prints(f"read file error: {filename}")
-
 
 def write_config(filename, dct):
     try:
