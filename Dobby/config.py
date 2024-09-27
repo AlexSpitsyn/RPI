@@ -4,13 +4,12 @@
 import json
 import os
 import dbg
+import configparser
 
 # private information
 users_ID = []
 admin_ID = 0
 DOBBY_TOKEN = ''
-tapo_user = ''
-tapo_pass = ''
 
 CONFIG_PATH = "config/"
 FILENAME_WTS_CONF = CONFIG_PATH + "wts-#.cfg"
@@ -65,18 +64,12 @@ def create_cfg_files(filename):
 def init_dobby():
     global DOBBY_TOKEN, dobby, admin_ID, tapo_pass, tapo_user, users_ID
     if os.path.isfile('dobby_login'):
-        with open('dobby_login', "r") as readfile:
-            for line in readfile:
-                line = line.strip()
-                if "tocken" in line:
-                    DOBBY_TOKEN = line.split('=')[1]
-                if "admin_ID" in line:
-                    admin_ID = int(line.split('=')[1])
-                if "tapo_user" in line:
-                    tapo_user = line.split('=')[1]
-                if "tapo_pass" in line:
-                    tapo_pass = line.split('=')[1]
-            readfile.close()
+        config = configparser.ConfigParser()
+        config.read('dobby_login')
+        DOBBY_TOKEN = config['Dobby']['tocken']
+        admin_ID = int(config['Dobby']['admin_ID'])
+        
+
     else:
         return 'login not found'
 
