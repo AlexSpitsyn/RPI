@@ -35,6 +35,8 @@ update_folder = 'update'
 backup_folder = 'backup'
 current_dir = os.getcwd()
 
+#Add route via huawei
+os.system(f"ip route add 149.154.167.220 via 192.168.8.1")  
 
 if not os.path.exists('log'):
     os.mkdir('log')
