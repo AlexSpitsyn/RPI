@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 # coding: utf-8
-
 import telebot
 from telebot import types
 import wl
@@ -302,10 +301,6 @@ def get_temp():
     return tempinfo
 
 def get_answer(answer):
-    if not hasattr(get_answer, "waiting"):
-        get_answer.waiting = False
-    #get_answer.waiting = False
-    #get_answer.param = ''
     ret = ''
     if 'отмена' in get_answer.param:
         get_answer.waiting = False
@@ -464,8 +459,10 @@ def menu_command_handler(msg: types.Message):
     else:
         help_msg = \
         'custom commads: \n\
+        setdate YYYY-MM-DD HH:MM:SS\n\
         add user <users_ID> \n\
         get log\n\
+        rad\n\
         reboot\n\
         cmd <cmd> - call bash\n\
         '
@@ -477,7 +474,7 @@ def msg_handler(msg):
         bot.send_message(config.admin_ID, f'New User: {msg.from_user.id}')
         bot.send_message(msg.chat.id, 'Permission denied')
     else:
-        if 'add user' in msg.text:
+        if msg.text.startswith('add user '):
             splt_msg = msg.text.split()
             try:
                 uid = int(splt_msg[2])
@@ -487,37 +484,51 @@ def msg_handler(msg):
                 bot.send_message(config.admin_ID, 'wrong command')
                 bot.send_message(config.admin_ID, 'add user xxx')
 
-        if msg.text == 'get log':
+        if msg.text.strip().startswith('get log'):
             if os.path.isfile('log/log.txt'):
                 send_file = open('log/log.txt', 'rb')
                 bot.send_document(msg.chat.id, send_file)
             else:
                 bot.send_message(msg.chat.id, 'Файл не найден')
 
-        elif msg.text.split()[0] == 'rad':
-            wl.toggle_gpio_wts(7)
-            bot.send_message(msg.chat.id, 'Файл не найден')
-            wts_conf['STATE'] == 'OK'
+        if msg.text.strip().startswith('rad'):
+            cmd_state, retval = wl.toggle_gpio_wts(7)
+            if cmd_state =='DONE':
+                bot.send_message(msg.chat.id, f'WTS-7 GPIO set to {config.wts[wts_num]["GPIO"]}')
+            else:
+                bot.send_message(msg.chat.id, f'CMD STATE: {cmd_state}')
 
-        elif msg.text == 'reboot':
+        if msg.text.strip().startswith('reboot'):
             bot.send_message(msg.chat.id, 'Добби ушёл...')
             time.sleep(10)
             os.system('shutdown -r now')
 
-        elif msg.text.split()[0] == 'cmd':
-            f = subprocess.run(msg.text[5:].split(), stdout=subprocess.PIPE)
-            bot.send_message(msg.chat.id, f.stdout)
+        if msg.text.startswith('cmd '):
+            cmd = msg.text[4:].split()
+            try:
+                f = subprocess.run([*cmd], stdout=subprocess.PIPE)
+                bot.send_message(msg.chat.id, f.stdout)
+            except OSError as e:
+                bot.send_message(msg.chat.id, e.strerror)
 
-        elif msg.text == 'clear log':
+        if msg.text.startswith('setdate '):
+            datetime = msg.text[8:]
+            res = os.system(f"date -s '{datetime}'")
+            if res == 0:
+                bot.send_message(msg.chat.id, f"OK")
+            else:
+                bot.send_message(msg.chat.id, f"RETCODE '{res}'")
+
+
+        if msg.text.strip().startswith('clear log'):
             f = open('log/clear', 'w')
             f.close()
 
-        elif get_answer.waiting:
+        if get_answer.waiting:
             bot.send_message(msg.chat.id, get_answer(msg.text))
 
 @bot.callback_query_handler(func=lambda call: True)
 def callback_inline(call):
-
     # ------------------------------------------------------------------------------------
     #                                        MAIN MENU
     # ------------------------------------------------------------------------------------
@@ -810,6 +821,7 @@ if os.path.isfile('update/update_state'):
 f = subprocess.run('date', stdout=subprocess.PIPE)
 bot.send_message(config.admin_ID, f.stdout)
 
-bot.polling(none_stop=True, interval=3, timeout=60)
+bot.infinity_polling()
+#bot.polling(none_stop=True, interval=3, timeout=60)
 # while True: # Don't let the main Thread end.
 #     pass
