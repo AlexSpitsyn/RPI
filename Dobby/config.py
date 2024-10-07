@@ -13,6 +13,7 @@ DOBBY_TOKEN = ''
 
 CONFIG_PATH = "config/"
 FILENAME_WTS_CONF = CONFIG_PATH + "wts-#.cfg"
+FILENAME_WSP100_CONF = CONFIG_PATH + "p100.cfg"
 FILENAME_BOILER_CONF = CONFIG_PATH + "boiler.cfg"
 FILENAME_WF_CONF = CONFIG_PATH + "wf.cfg"
 FILENAME_PUMP_CONF = CONFIG_PATH + "pump.cfg"
@@ -36,6 +37,7 @@ wf = {}
 boiler = {}
 pump = {}
 dobby = {}
+wsp100 = []
 
 
 def create_cfg_files(filename):
@@ -68,8 +70,6 @@ def init_dobby():
         config.read('dobby_login')
         DOBBY_TOKEN = config['Dobby']['tocken']
         admin_ID = int(config['Dobby']['admin_ID'])
-        
-
     else:
         return 'login not found'
 
@@ -128,6 +128,11 @@ def init():
         dbg.prints('WARNING! No such file:' + FILENAME_PUMP_CONF)
         dbg.prints('Creating file...')
         create_cfg_files(FILENAME_PUMP_CONF)
+
+    if os.path.isfile(FILENAME_WSP100_CONF):
+        read_wsp100()
+    else:
+        dbg.prints('WARNING! No such file:' + FILENAME_WSP100_CONF)
 
 
 # =====================  PASS ID =============================
@@ -210,11 +215,24 @@ def write_boiler():
 def read_pump():
     pump.update(read_config(FILENAME_PUMP_CONF))
 
-
 def write_pump():
     write_config(FILENAME_PUMP_CONF, pump)
 
+# =====================  WSP =============================
+#                WIRELESS SOCKET TAPO P100
+# --------------CONFIG------------
+# IP / MAC / NAME
+# --------------------------------
+def read_wsp100():
+    global wsp100
+    wsp100 = read_config(FILENAME_WSP100_CONF)
 
+
+def write_wsp100():
+    global wsp100
+    write_config(FILENAME_WSP100_CONF, wsp100)
+
+#===========================================================
 def read_config(filename):
     try:
         with open(filename, "r") as read_file:

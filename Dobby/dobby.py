@@ -10,6 +10,7 @@ import os
 import time
 import ds18b20
 import subprocess
+import p100
 
 # ======================================================================================================
 #
@@ -20,7 +21,8 @@ def drow_main_menu():
     mainmenu = types.InlineKeyboardMarkup()
     key1 = types.InlineKeyboardButton(text='Отопление', callback_data='heat_select')
     key2 = types.InlineKeyboardButton(text='Температура', callback_data='temp')
-    mainmenu.row(key2, key1)
+    key3 = types.InlineKeyboardButton(text='Розетки', callback_data='wsp100')
+    mainmenu.row(key2, key1, key3)
     return '\t ГЛАВНОЕ МЕНЮ', mainmenu
 
 def drow_wts_select_menu():
@@ -78,6 +80,83 @@ def drow_wts_menu(wts_num, idle=' '):
     wts_options_menu.row(key_back, key_home)
 
     return header_str, wts_options_menu
+
+def drow_wsp100_menu():
+    global p100_dev
+    header_str = 'Розетки'
+    key_back.callback_data = 'mainmenu'
+    keys = []
+    wsp100_menu = types.InlineKeyboardMarkup()
+    ip_list = [i['IP'] for i in config.wsp100]
+    for ip in ip_list:
+        wsp100_name = config.wsp100[ip_list.index(ip)]['NAME'].ljust(20, "\t")
+        response = os.system(f"ping -c 1 {ip} > /dev/null")
+        if response == 0:
+            p100_state = p100_dev.getDeviceState(ip)
+            if p100_state == 'on':
+                wsp100_state  = '🟠'#orange
+            elif p100_state == 'off':
+                wsp100_state  = '🟢'#green
+            else:
+                wsp100_state  = '⚠️'
+            cb_data = f'wsp100_toggle@{ip}'
+        else:
+            wsp100_state = '🔴'#red
+            cb_data = 'None'
+
+        wsp100_menu.add(types.InlineKeyboardButton(text=f'{wsp100_name}\t\t{wsp100_state}',
+                                               callback_data=cb_data))
+
+    key_options = types.InlineKeyboardButton(text='⚙️', callback_data=f'wsp100_opt')
+    key_update = types.InlineKeyboardButton(text='🔄', callback_data=f'wsp100_update@menu')
+    wsp100_menu.row(key_options, key_update)
+    wsp100_menu.row(key_back, key_home)
+
+    return header_str, wsp100_menu
+
+def drow_wsp100_opt():
+    header_str = 'Настройки розеток'
+    key_back.callback_data = 'wsp100'
+    wsp100_optmenu = types.InlineKeyboardMarkup()
+    key1 = types.InlineKeyboardButton(text='ℹ️', callback_data=f'wsp100_inf')
+    key2 = types.InlineKeyboardButton(text='🆕', callback_data=f'wsp100_opt_add')
+    key3 = types.InlineKeyboardButton(text='❌', callback_data=f'wsp100_opt_rm')
+    wsp100_optmenu.add(key1, key2, key3)
+    wsp100_optmenu.row(key_back, key_home)
+
+    return header_str, wsp100_optmenu
+
+def drow_wsp100_add():
+    global p100_dev
+    header_str = 'Новые устройства'
+    key_back.callback_data = 'wsp100_opt'
+    wsp100_add_menu = types.InlineKeyboardMarkup()
+    p100_dev.scan_wsp100()
+    new_dev = []
+    mac_list = [i['MAC'] for i in config.wsp100]
+    for dev in p100_dev.mac:
+        if dev not in mac_list:
+            new_dev.append(dev)
+    for dev in new_dev:
+        wsp100_add_menu.add(types.InlineKeyboardButton(text=dev,
+            callback_data=f'wsp100_add@{dev}'))
+    wsp100_add_menu.add(types.InlineKeyboardButton(text='🔄',
+            callback_data=f'wsp100_update@add'))
+    wsp100_add_menu.row(key_back, key_home)
+
+    return header_str, wsp100_add_menu
+
+def drow_wsp100_rm():
+    header_str = 'Выберите утройство\nдля удаления из системы'
+    key_back.callback_data = 'wsp100_opt'
+    wsp100_rm_menu = types.InlineKeyboardMarkup()
+    mac_list = [i['MAC'] for i in config.wsp100]
+    for dev in mac_list:
+        wsp100_rm_menu.add(types.InlineKeyboardButton(text=dev,
+        callback_data=f'wsp100_rm@{dev}'))
+    wsp100_rm_menu.row(key_back, key_home)
+
+    return header_str, wsp100_rm_menu
 
 def drow_boiler_menu(idle=' '):
     config.read_boiler()
@@ -301,6 +380,11 @@ wl.LOG_SX1278 = config.dobby['LOG'] == 'ON'
 key_home = types.InlineKeyboardButton(text='🏠', callback_data='mainmenu')
 key_back = types.InlineKeyboardButton(text='↩️', callback_data='back')
 
+p100_dev = p100.WSP100()
+p100_dev.scan_wsp100()
+
+get_answer.waiting = False
+
 @bot.message_handler(content_types=['document'])
 def upload_file(message):
     file_name = message.document.file_name
@@ -317,6 +401,7 @@ def upload_file(message):
 # boiler - boiler settings
 # wf - wf settings
 # pumps - pumps settings
+# tapo - wsp100 menu
 # help - help
 @bot.message_handler(commands=['menu'])
 def menu_command_handler(msg: types.Message):
@@ -360,6 +445,15 @@ def menu_command_handler(msg: types.Message):
         bot.send_message(msg.chat.id, 'Permission denied')
     else:
         header, markup = drow_pump_menu()
+        bot.send_message(msg.chat.id, header, reply_markup=markup)
+
+@bot.message_handler(commands=['tapo'])
+def menu_command_handler(msg: types.Message):
+    if msg.from_user.id not in config.users_ID:
+        bot.send_message(config.admin_ID, f'New User: {msg.from_user.id}')
+        bot.send_message(msg.chat.id, 'Permission denied')
+    else:
+        header, markup = drow_wsp100_menu()
         bot.send_message(msg.chat.id, header, reply_markup=markup)
 
 @bot.message_handler(commands=['help'])
@@ -616,6 +710,94 @@ def callback_inline(call):
         bot.send_message(call.message.chat.id, 'Введите температуру')
         get_answer.waiting = True
         get_answer.param = call.data
+
+
+    # ------------------------------------------------------------------------------------
+    #                                   WSP100 MENU
+    # ------------------------------------------------------------------------------------
+    elif call.data == 'wsp100':
+        header, markup = drow_wsp100_menu()
+        bot.edit_message_text(header, call.message.chat.id, call.message.message_id,
+                              reply_markup=markup)
+
+    # ------------------------------------------------------------------------------------
+    #                                   WSP100 TOGGLE
+    # ------------------------------------------------------------------------------------
+    elif 'wsp100_toggle' in call.data:
+        ip = call.data.split('@')[1]
+        p100_dev.toggle(ip)
+        header, markup = drow_wsp100_menu()
+        bot.edit_message_text(header, call.message.chat.id, call.message.message_id,
+                              reply_markup=markup)
+
+    # ------------------------------------------------------------------------------------
+    #                                WSP100 MENU -> OPTIONS
+    # ------------------------------------------------------------------------------------
+    elif call.data == 'wsp100_opt':
+        header, markup = drow_wsp100_opt()
+        bot.edit_message_text(header, call.message.chat.id, call.message.message_id,
+                              reply_markup=markup)
+
+    # ------------------------------------------------------------------------------------
+    #                           WSP100 MENU -> OPTIONS -> ADD
+    # ------------------------------------------------------------------------------------
+    elif call.data == 'wsp100_opt_add':
+        header, markup = drow_wsp100_add()
+        bot.edit_message_text(header, call.message.chat.id, call.message.message_id,
+                              reply_markup=markup)
+
+    # ------------------------------------------------------------------------------------
+    #                           WSP100 MENU -> OPTIONS -> ADD -> DEV
+    # ------------------------------------------------------------------------------------
+    elif 'wsp100_add' in call.data:
+        mac = call.data.split('@')[1]
+        ip = p100_dev.ip[p100_dev.getDevNumByMAC(mac)]
+        name = p100_dev.getDeviceName(ip)
+        config.wsp100.append({"IP": ip, "MAC": mac, "NAME": name})
+        config.write_wsp100()
+        header, markup = drow_wsp100_add()
+        bot.edit_message_text(header, call.message.chat.id, call.message.message_id,
+                              reply_markup=markup)
+
+    # ------------------------------------------------------------------------------------
+    #                           WSP100 MENU -> OPTIONS -> RM
+    # ------------------------------------------------------------------------------------
+    elif call.data == 'wsp100_opt_rm':
+        header, markup = drow_wsp100_rm()
+        bot.edit_message_text(header, call.message.chat.id, call.message.message_id,
+                              reply_markup=markup)
+
+    # ------------------------------------------------------------------------------------
+    #                           WSP100 MENU -> OPTIONS -> RM -> DEV
+    # ------------------------------------------------------------------------------------
+    elif 'wsp100_rm' in call.data:
+        mac = call.data.split('@')[1]
+        mac_list = [i['MAC'] for i in config.wsp100]
+        idx = mac_list.index(mac)
+        config.wsp100.pop(idx)
+        config.write_wsp100()
+        header, markup = drow_wsp100_rm()
+        bot.edit_message_text(header, call.message.chat.id, call.message.message_id,
+                              reply_markup=markup)
+
+    # ------------------------------------------------------------------------------------
+    #                           WSP100 MENU -> OPTIONS -> INF
+    # ------------------------------------------------------------------------------------
+    elif call.data == 'wsp100_inf':
+        inf = ''
+        for i in config.wsp100:
+            inf+= f'{i["NAME"]}: {i["IP"]} - {i["MAC"]}\n'
+        bot.send_message(call.message.chat.id, inf)
+
+    # ------------------------------------------------------------------------------------
+    #                           WSP100 MENU -> UPDATE
+    # ------------------------------------------------------------------------------------
+    elif call.data.startswith('wsp100_update@'):
+        if call.data.split('@')[1] == 'add':
+            header, markup = drow_wsp100_add()
+        if call.data.split('@')[1] == 'menu':
+            header, markup = drow_wsp100_menu()
+        bot.edit_message_text(header, call.message.chat.id, call.message.message_id, reply_markup=markup)
 
 if os.path.isfile('update/update_state'):
     update_state_str = 'unknown'
