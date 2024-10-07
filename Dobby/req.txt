@@ -3,4 +3,6 @@ pyTelegramBotAPI
 PyP100
 scapy
 subprocess
+nmap
+configparser
 
