@@ -47,18 +47,15 @@ if not os.path.exists(backup_folder):
 
 if os.path.isfile('log/clear'):
     f_log = open('log/log.txt', 'w')
-    #f_err = open('log/log_err.txt', 'w')
     os.remove('log/clear')
 else:
     f_log = open('log/log.txt', 'a')
-    #f_err = open('log/log_err.txt', 'a')
-# f_update_log = open('log/log_update.txt', 'a')
+
 
 now = datetime.datetime.now()
-f_log.write(now.strftime("\r\n\t\t\t\t%d/%m/%Y %H:%M:%S\r\n"))
-#f_err.write(now.strftime("\r\n\t\t\t\t%d/%m/%Y %H:%M:%S"))
+f_log.write(now.strftime("\n\t\t\t\t%d/%m/%Y %H:%M:%S\n"))
 f_log.flush()
-#f_err.flush()
+
 
 # ----------------------------------------------------------------
 #                            RECOVERY
@@ -66,7 +63,7 @@ f_log.flush()
 
 
 if os.path.isfile(update_folder + '/' + 'idle'):
-    f_log.write('RECOVERY START \r\n' )
+    f_log.write('\n\t\t\t\tRECOVERY START \n' )
     f_log.flush()
     backup_files = os.listdir(backup_folder)
     for file_name in backup_files:
@@ -83,17 +80,17 @@ if os.path.isfile(update_folder + '/' + 'idle'):
 extrating_pass = 'FAIL'
 if os.path.isfile(update_folder + '/' + update_file):
 
-    f_log.write('UPDATE START \r\n')
+    f_log.write('\n\t\t\t\tUPDATE START\n')
     f_log.flush()
     try:
         z = zipfile.ZipFile(update_folder + '/' + update_file, 'r')
         z.extractall(update_folder)
         z.close()
         extrating_pass = 'OK'
-        f_log.write('unpacking done\r\n')
+        f_log.write('unpacking done\n')
         f_log.flush()
     except (IOError, zipfile.BadZipfile):
-        f_log.write('unpacking fail\r\n')
+        f_log.write('unpacking fail\n')
         f_log.flush()
 
 
@@ -101,24 +98,24 @@ if os.path.isfile(update_folder + '/' + update_file):
 
     if extrating_pass == 'OK':
         # backup
-        f_log.write('Backup file:\r\n')
+        f_log.write('Backup file:\n')
         f_log.flush()
         backup_files = os.listdir()
         for file_name in backup_files:
             if os.path.isfile(file_name):
                 shutil.copy(file_name, backup_folder)
-                f_log.write(file_name + '\r\n')
+                f_log.write(file_name + '\n')
         f_log.flush()
 
         # update
-        f_log.write('Replace file:\r\n')
+        f_log.write('Replace file:\n')
         f_log.flush()
         update_files = os.listdir(update_folder)
         for file_name in update_files:
             if os.path.isfile(update_folder + '/' + file_name):
                 shutil.copy(update_folder + '/' + file_name, current_dir)
                 os.remove(update_folder + '/' + file_name)
-                f_log.write(file_name + '\r\n')
+                f_log.write(file_name + '\n')
         f_log.flush()
 
     update_state = open(update_folder + '/' + 'update_state', 'a')
@@ -128,7 +125,7 @@ if os.path.isfile(update_folder + '/' + update_file):
 wl_update()
 while True:
 
-    f_log.write("\r\nSTARTING DOBBY")
+    f_log.write("\n\t\t\t\tSTARTING DOBBY\n")
     f_log.flush()
     try:
         sleep(10)
@@ -141,7 +138,7 @@ while True:
             f_log.write('ERROR: OS not set')
 
     except subprocess.CalledProcessError as exception:
-        f_log.write('EXCEPTION')
+        f_log.write('\n\t\t\t\tEXCEPTION\n')
         f_log.flush()
 
 # f_log.close()
