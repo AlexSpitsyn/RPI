@@ -47,7 +47,7 @@ def drow_wts_select_menu():
     wts_select_menu.row(key_back, key_home)
     return 'Настройки датчиков', wts_select_menu
 
-def drow_wts_menu(wts_num, idle=' '):
+def drow_wts_menu(wts_num):
     config.read_wts(wts_num)
     wts_name = config.wts[wts_num]['NAME']
     wts_temp = config.wts[wts_num]['TEMP']
@@ -55,18 +55,18 @@ def drow_wts_menu(wts_num, idle=' '):
     wts_gpio = config.wts[wts_num]['GPIO']
 
     if wts_state == wl.WL_STATE[0]:  # 'OK'
-        header_str = f'Д{config.wts[wts_num]["WTSN"]} {wts_name} {wts_temp}°C{idle}'
+        header_str = f'Д{config.wts[wts_num]["WTSN"]} {wts_name} {wts_temp}°C'
         if wts_gpio == '1':
             button_gpio_text = 'ON'
         else:
             button_gpio_text = 'OFF'
 
     elif wts_state == wl.WL_STATE[4]:  # 'OFFLINE'
-        header_str = f'Д{config.wts[wts_num]["WTSN"]} {wts_name} OFFLINE{idle}'
+        header_str = f'Д{config.wts[wts_num]["WTSN"]} {wts_name} OFFLINE'
         button_gpio_text = '⚠'
 
     else:
-        header_str = f'Д{config.wts[wts_num]["WTSN"]} {wts_state} {idle}'
+        header_str = f'Д{config.wts[wts_num]["WTSN"]} {wts_state}'
         button_gpio_text = '⚠'
 
     wts_options_menu = types.InlineKeyboardMarkup()
@@ -158,7 +158,7 @@ def drow_wsp100_rm():
 
     return header_str, wsp100_rm_menu
 
-def drow_boiler_menu(idle=' '):
+def drow_boiler_menu():
     config.read_boiler()
     state = config.boiler[config.wf_blr_fieldnames[0]]
     temp_ctrl = config.boiler[config.wf_blr_fieldnames[1]]
@@ -168,19 +168,19 @@ def drow_boiler_menu(idle=' '):
     if state == wl.WL_STATE[0]:  # 'OK'
         if temp_ctrl == '1':
             button_onoff_text = '✅'
-            header_str = f'Котёл {temp}\t\t[ {set_temp}°C ]{idle}'
+            header_str = f'Котёл {temp}\t\t[ {set_temp}°C ]'
         elif temp_ctrl == '0':
             button_onoff_text = '⏹'
-            header_str = f'Котёл {temp}\t\t[ {set_temp}°C ]{idle}'
+            header_str = f'Котёл {temp}\t\t[ {set_temp}°C ]'
         else:
             button_onoff_text = '⚠️'
-            header_str = f'Котёл [ {set_temp}°C ]{idle}'
+            header_str = f'Котёл [ {set_temp}°C ]'
     elif state == wl.WL_STATE[4]:  # 'OFFLINE'
         button_onoff_text = '🛑'  # offline
-        header_str = f'Котёл - нет связи{idle}'
+        header_str = f'Котёл - нет связи'
     else:
         button_onoff_text = '⚠️'
-        header_str = f'Котёл {state}{idle}'
+        header_str = f'Котёл {state}'
 
     boiler_options_menu = types.InlineKeyboardMarkup()
     key1 = types.InlineKeyboardButton(text=button_onoff_text, callback_data='boiler_onoff')
@@ -192,7 +192,7 @@ def drow_boiler_menu(idle=' '):
     boiler_options_menu.row(key_back, key_home)
     return header_str, boiler_options_menu
 
-def drow_wf_menu(idle=' '):
+def drow_wf_menu():
     config.read_wf()
     state = config.wf[config.wf_blr_fieldnames[0]]
     temp_ctrl = config.wf[config.wf_blr_fieldnames[1]]
@@ -202,19 +202,19 @@ def drow_wf_menu(idle=' '):
     if state == wl.WL_STATE[0]:  # 'OK'
         if temp_ctrl == '1':
             button_onoff_text = '✅'
-            header_str = f'ТП {temp} [ {set_temp}°C ]{idle}'
+            header_str = f'ТП {temp} [ {set_temp}°C ]'
         elif temp_ctrl == '0':
             button_onoff_text = '⏹'
-            header_str = f'ТП {temp} [ {set_temp}°C ]{idle}'
+            header_str = f'ТП {temp} [ {set_temp}°C ]'
         else:
             button_onoff_text = '⚠️'
             header_str = f'ТП [ {set_temp}°C ]'
     elif state == wl.WL_STATE[4]:  # 'OFFLINE'
         button_onoff_text = '🛑'  # offline
-        header_str = f'ТП - нет связи{idle}'
+        header_str = f'ТП - нет связи'
     else:
         button_onoff_text = '⚠️'
-        header_str = f'ТП {state}{idle}'
+        header_str = f'ТП {state}'
 
     wf_options_menu = types.InlineKeyboardMarkup()
     key1 = types.InlineKeyboardButton(text=button_onoff_text, callback_data='wf_onoff')
@@ -226,7 +226,7 @@ def drow_wf_menu(idle=' '):
     wf_options_menu.row(key_back, key_home)
     return header_str, wf_options_menu
 
-def drow_pump_menu(idle=' '):
+def drow_pump_menu():
     config.read_pump()
     state = config.pump['STATE']
     button_pump = ['00', '00', '00', '00']
@@ -236,11 +236,11 @@ def drow_pump_menu(idle=' '):
         # PUMP_X_X_ST + PUMP_X_X_SW
 
     if state == wl.WL_STATE[0]:  # 'OK'
-        header_str = f'Насосы {idle}'
+        header_str = f'Насосы'
     elif state == wl.WL_STATE[4]:  # 'OFFLINE'
-        header_str = f'Насосы нет связи {idle}'
+        header_str = f'Насосы нет связи'
     else:
-        header_str = f'Насосы {state}{idle}'
+        header_str = f'Насосы {state}'
 
     pumps_menu = types.InlineKeyboardMarkup()
 
@@ -264,6 +264,10 @@ def drow_pump_menu(idle=' '):
     pumps_menu.row(key_back, key_home)
 
     return header_str, pumps_menu
+
+def drow_idle_state(call):
+    bot.edit_message_text(call.message.text+' ⏳', call.message.chat.id, call.message.message_id,
+                                    reply_markup=call.message.reply_markup)
 
 def get_temp():
     for i in range(len(config.wts)):
@@ -500,7 +504,6 @@ def msg_handler(msg):
         else:
             bot.send_message(msg.chat.id, f"RETCODE '{res}'")
 
-
     if msg.text.strip().startswith('clear log'):
         f = open('log/clear', 'w')
         f.close()
@@ -574,9 +577,7 @@ def callback_inline(call):
 
     elif 'wts_gpio_toggle' in call.data:
         wts_num = int(call.data.split('@')[1])
-        header, markup = drow_wts_menu(wts_num, '⏳')
-        bot.edit_message_text(header, call.message.chat.id, call.message.message_id,
-                              reply_markup=markup)
+        drow_idle_state(call)
         wl.toggle_gpio_wts(wts_num)
         header, markup = drow_wts_menu(wts_num)
         bot.edit_message_text(header, call.message.chat.id, call.message.message_id,
@@ -584,14 +585,11 @@ def callback_inline(call):
 
     elif 'wts_update' in call.data:
         wts_num = int(call.data.split('@')[1])
-        header, markup = drow_wts_menu(wts_num, '⏳')
-        bot.edit_message_text(header, call.message.chat.id, call.message.message_id,
-                              reply_markup=markup)
+        drow_idle_state(call)
         wl.read_wts(wts_num)
         header, markup = drow_wts_menu(wts_num)
         bot.edit_message_text(header, call.message.chat.id, call.message.message_id,
                               reply_markup=markup)
-        drow_wts_menu(wts_num, '⏳')
 
     elif 'set_wts_name' in call.data:
         bot.send_message(call.message.chat.id, 'Введите название датчика')
@@ -609,7 +607,6 @@ def callback_inline(call):
         header, markup = drow_wts_menu(wts_num)
         bot.edit_message_text(header, call.message.chat.id, call.message.message_id,
                               reply_markup=markup)
-
 
     # ------------------------------------------------------------------------------------
     #                           HEAT SELECT -> BOILER OPTIONS
@@ -630,9 +627,7 @@ def callback_inline(call):
                               reply_markup=markup)
 
     elif call.data == 'boiler_update':
-        header, markup = drow_boiler_menu('⏳')
-        bot.edit_message_text(header, call.message.chat.id, call.message.message_id,
-                              reply_markup=markup)
+        drow_idle_state(call)
         wl.update_boiler()
         header, markup = drow_boiler_menu()
         bot.edit_message_text(header, call.message.chat.id, call.message.message_id,
@@ -658,9 +653,7 @@ def callback_inline(call):
                               reply_markup=markup)
 
     elif call.data == 'wf_update':
-        header, markup = drow_wf_menu('⏳')
-        bot.edit_message_text(header, call.message.chat.id, call.message.message_id,
-                              reply_markup=markup)
+        drow_idle_state(call)
         wl.update_wf()
         header, markup = drow_wf_menu()
         bot.edit_message_text(header, call.message.chat.id, call.message.message_id,
@@ -677,9 +670,7 @@ def callback_inline(call):
 
     elif call.data.split('@')[0] == 'pump_toggle':
         pump = call.data.split('@')[1]
-        header, markup = drow_pump_menu('⏳')
-        bot.edit_message_text(header, call.message.chat.id, call.message.message_id,
-                              reply_markup=markup)
+        drow_idle_state(call)
         wl.toggle_pump(pump)
         wl.get_pump()
         header, markup = drow_pump_menu()
@@ -687,9 +678,7 @@ def callback_inline(call):
                               reply_markup=markup)
 
     elif call.data.split('@')[0] == 'pump_update':
-        header, markup = drow_pump_menu('⏳')
-        bot.edit_message_text(header, call.message.chat.id, call.message.message_id,
-                              reply_markup=markup)
+        drow_idle_state(call)
         wl.get_pump()
         header, markup = drow_pump_menu()
         bot.edit_message_text(header, call.message.chat.id, call.message.message_id,
@@ -702,7 +691,6 @@ def callback_inline(call):
         bot.send_message(call.message.chat.id, 'Введите температуру')
         get_answer.waiting = True
         get_answer.param = call.data
-
 
     # ------------------------------------------------------------------------------------
     #                                   WSP100 MENU
@@ -788,6 +776,7 @@ def callback_inline(call):
         if call.data.split('@')[1] == 'add':
             header, markup = drow_wsp100_add()
         if call.data.split('@')[1] == 'menu':
+            drow_idle_state(call)
             header, markup = drow_wsp100_menu()
         bot.edit_message_text(header, call.message.chat.id, call.message.message_id, reply_markup=markup)
 
