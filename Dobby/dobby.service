@@ -1,8 +1,10 @@
 [Unit]
 Description=dobby
-After=network.target
+Wants=network-online.target
+After=network-online.target
 
 [Service]
+ExecStartPre=/bin/sleep 30
 ExecStart=/usr/bin/python3 run_dobby.py > run_log.txt
 WorkingDirectory=/home/alex/Dobby/
 StandardOutput=inherit
