@@ -229,13 +229,23 @@ def drow_wf_menu():
     return header_str, wf_options_menu
 
 def drow_pump_menu():
+    pumps_menu = types.InlineKeyboardMarkup()
+    key_back.callback_data = 'heat_select'
     config.read_pump()
     state = config.pump['STATE']
-    button_pump = ['00', '00', '00', '00']
-    button_pump_char = {'10': '🛑', '00': 'Ⓜ', '11': '⚠', '01': '✅'}
+    button_pump_st_sw = ['00', '00', '00', '00']
+    button_pump_symbol = {'10': '🛑', '00': 'Ⓜ', '11': '⚠', '01': '✅'}
+    button_pump_name = ['Кухня-гост', '  Прихожая-сп.гост', 'Спальная 2.1-2.2.', 'Спальная 2.3-2.4.']
     for x in range(4):
-        button_pump[x] = config.pump[config.pump_fieldnames[x + 5]] + config.pump[config.pump_fieldnames[x + 1]]
-        # PUMP_X_X_ST + PUMP_X_X_SW
+        name = button_pump_name[x].ljust((20-len(button_pump_name[x]))*2+len(button_pump_name[x]), " ")
+        pump_st_sw = config.pump[config.pump_fieldnames[x + 5]] + config.pump[config.pump_fieldnames[x + 1]]
+        # Get PUMP_X_X_ST + PUMP_X_X_SW from cfg file,  convert to pump symbol
+        # 10 - OFF
+        # 00 - Manual ON
+        # 11 - Warning
+        # 01 - ON
+        pumps_menu.row(types.InlineKeyboardButton(text=name + button_pump_symbol[pump_st_sw],
+                                      callback_data=f'pump_toggle@{config.pump_fieldnames[x+1]}'))
 
     if state == wl.WL_STATE[0]:  # 'OK'
         header_str = f'Насосы'
@@ -244,25 +254,7 @@ def drow_pump_menu():
     else:
         header_str = f'Насосы {state}'
 
-    pumps_menu = types.InlineKeyboardMarkup()
-
-    key1 = types.InlineKeyboardButton(text=button_pump_char[button_pump[0]] + '  Кухня-гост',
-                                      callback_data=f'pump_toggle@{config.pump_fieldnames[1]}')
-    key2 = types.InlineKeyboardButton(text=button_pump_char[button_pump[1]] + '  Прихожая-сп.гост',
-                                      callback_data=f'pump_toggle@{config.pump_fieldnames[2]}')
-    key3 = types.InlineKeyboardButton(text=button_pump_char[button_pump[2]] + '  Спальная 2.1 -2.2.',
-                                      callback_data=f'pump_toggle@{config.pump_fieldnames[3]}')
-    key4 = types.InlineKeyboardButton(text=button_pump_char[button_pump[3]] + '  Спальная 2.3 -2.4.',
-                                      callback_data=f'pump_toggle@{config.pump_fieldnames[4]}')
-    key5 = types.InlineKeyboardButton(text='🔄', callback_data='pump_update')
-
-    key_back.callback_data = 'heat_select'
-
-    pumps_menu.row(key1)
-    pumps_menu.row(key2)
-    pumps_menu.row(key3)
-    pumps_menu.row(key4)
-    pumps_menu.row(key5)
+    pumps_menu.row(types.InlineKeyboardButton(text='🔄', callback_data='pump_update'))
     pumps_menu.row(key_back, key_home)
 
     return header_str, pumps_menu
