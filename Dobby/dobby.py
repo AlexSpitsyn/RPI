@@ -89,7 +89,9 @@ def drow_wsp100_menu():
     wsp100_menu = types.InlineKeyboardMarkup()
     ip_list = [i['IP'] for i in config.wsp100]
     for ip in ip_list:
-        wsp100_name = config.wsp100[ip_list.index(ip)]['NAME'].ljust(20, "\t")
+        wsp100_name = config.wsp100[ip_list.index(ip)]['NAME']
+        #allign wight of button
+        wsp100_name = wsp100_name.ljust((20-len(wsp100_name))*2, " ")
         response = os.system(f"ping -c 1 {ip} > /dev/null")
         if response == 0:
             p100_state = p100_dev.getDeviceState(ip)
