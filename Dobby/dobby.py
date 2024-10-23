@@ -366,7 +366,6 @@ config.init_dobby()
 config.init()
 
 bot = telebot.TeleBot(config.DOBBY_TOKEN)
-UPDATE_TIME = int(config.dobby['UPDATE_TIME'])
 dbg.DEBUG = config.dobby['DBG'] == 'ON'
 wl.EMULATION = config.dobby['EMULATION'] == 'ON'
 wl.LOG_SX1278 = config.dobby['LOG'] == 'ON'
@@ -380,14 +379,21 @@ p100_dev.scan_wsp100()
 get_answer.waiting = False
 
 @bot.message_handler(chat_id=[config.admin_ID], content_types=['document'])
-def upload_file(message):
-    file_name = message.document.file_name
-    file_id = message.document.file_name
-    file_id_info = bot.get_file(message.document.file_id)
+def upload_file(msg):
+    file_name = msg.document.file_name
+    file_id = msg.document.file_name
+    file_id_info = bot.get_file(msg.document.file_id)
     downloaded_file = bot.download_file(file_id_info.file_path)
-    with open('update/update.zip', 'wb') as new_file:
+    if os.path.exists('update'):
+        os.system('mkdir update')
+    with open(f'update/{file_name}', 'wb') as new_file:
         new_file.write(downloaded_file)
         new_file.close()
+    if os.path.exists('backup'):
+        os.system('mkdir backup')
+    if os.path.isfile(file_name):
+        os.system(f'cp {file_name} backup/{file_name}')
+    os.system(f'cp update/{file_name} {file_name}')
 
 # dobby commands
 # menu - start menu
@@ -773,14 +779,6 @@ def callback_inline(call):
             drow_idle_state(call)
             header, markup = drow_wsp100_menu()
         bot.edit_message_text(header, call.message.chat.id, call.message.message_id, reply_markup=markup)
-
-if os.path.isfile('update/update_state'):
-    update_state_str = 'unknown'
-    with open('update/update_state', 'r') as update_state:
-        update_state_str = update_state.readline()
-        update_state.close()
-    bot.send_message(config.admin_ID, 'DOBBY UPDATE: ' + update_state_str)
-    os.remove('update/update_state')
 
 f = subprocess.run('date', stdout=subprocess.PIPE)
 bot.send_message(config.admin_ID, f.stdout)
