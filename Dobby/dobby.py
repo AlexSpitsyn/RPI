@@ -446,49 +446,29 @@ def menu_command_handler(msg: types.Message):
     '
     bot.send_message(msg.chat.id, help_msg)
 
-@bot.message_handler(func=lambda msg: True, content_types=['text'])
-def msg_handler(msg):
-    if msg.text.startswith('join'):
-        if msg.from_user.id not in config.users_ID:
-            bot.send_message(config.admin_ID, f'New User: {msg.from_user.id}')
-            bot.send_message(msg.chat.id, 'Permission denied')
-        else:
-            bot.send_message(msg.chat.id, 'Hi')
-
-@bot.message_handler(chat_id=[config.admin_ID], func=lambda msg: True, content_types=['text'])
-def msg_handler(msg):
-    if msg.text.startswith('add user '):
-        splt_msg = msg.text.split()
-        try:
-            uid = int(splt_msg[2])
-            config.users_ID.append(uid)
-            config.write_pass_list(config.users_ID)
-        except ValueError:
-            bot.send_message(config.admin_ID, 'wrong command')
-            bot.send_message(config.admin_ID, 'add user xxx')
-
 @bot.message_handler(chat_id=config.users_ID, func=lambda msg: True, content_types=['text'])
 def msg_handler(msg):
-    if msg.text.strip().startswith('get log'):
+    message = msg.text.strip().lower()
+    if message.startswith('get log'):
         if os.path.isfile('log/log.txt'):
             send_file = open('log/log.txt', 'rb')
             bot.send_document(msg.chat.id, send_file)
         else:
             bot.send_message(msg.chat.id, 'Файл не найден')
 
-    if msg.text.strip().startswith('rad'):
+    if message.startswith('rad'):
         cmd_state, retval = wl.toggle_gpio_wts(7)
         if cmd_state =='DONE':
             bot.send_message(msg.chat.id, f'WTS-7 GPIO set to {config.wts[wts_num]["GPIO"]}')
         else:
             bot.send_message(msg.chat.id, f'CMD STATE: {cmd_state}')
 
-    if msg.text.strip().startswith('reboot'):
+    if message.startswith('reboot'):
         bot.send_message(msg.chat.id, 'Добби ушёл...')
         time.sleep(10)
         os.system('shutdown -r now')
 
-    if msg.text.startswith('cmd '):
+    if message.startswith('cmd '):
         cmd = msg.text[4:].split()
         try:
             f = subprocess.run([*cmd], stdout=subprocess.PIPE)
@@ -496,7 +476,7 @@ def msg_handler(msg):
         except OSError as e:
             bot.send_message(msg.chat.id, e.strerror)
 
-    if msg.text.startswith('setdate '):
+    if message.startswith('setdate '):
         datetime = msg.text[8:]
         res = os.system(f"date -s '{datetime}'")
         if res == 0:
@@ -504,12 +484,34 @@ def msg_handler(msg):
         else:
             bot.send_message(msg.chat.id, f"RETCODE '{res}'")
 
-    if msg.text.strip().startswith('clear log'):
+    if message.startswith('clear log'):
         f = open('log/clear', 'w')
         f.close()
 
+    if message.startswith('add user '):
+        if msg.from_user.id == config.admin_ID:
+            splt_msg = msg.text.split()
+            try:
+                uid = int(splt_msg[2])
+                config.users_ID.append(uid)
+                config.write_pass_list(config.users_ID)
+            except ValueError:
+                bot.send_message(config.admin_ID, 'wrong command')
+                bot.send_message(config.admin_ID, 'add user xxx')
+        else:
+            bot.send_message(msg.chat.id, "You are not allowed to use this command")
+
     if get_answer.waiting:
         bot.send_message(msg.chat.id, get_answer(msg.text))
+
+@bot.message_handler(func=lambda msg: True, content_types=['text'])
+def msg_handler(msg):
+    if msg.text.strip().lower().startswith('join'):
+        if msg.from_user.id not in config.users_ID:
+            bot.send_message(config.admin_ID, f'New User: {msg.from_user.id}')
+            bot.send_message(msg.chat.id, 'Permission denied')
+        else:
+            bot.send_message(msg.chat.id, 'Hi')
 
 @bot.callback_query_handler(func=lambda call: True)
 def callback_inline(call):
