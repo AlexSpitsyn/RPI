@@ -27,4 +27,7 @@ while True:
         if (phone == ADMIN_PHONE) and (text.strip().lower() == 'reboot'):
             sms.delete_sms(ctx, index)
             os.system("sudo reboot")
+        if (phone == ADMIN_PHONE) and (text.strip().lower() == 'restore'):
+            sms.delete_sms(ctx, index)
+            os.system("cp -r backup/*")
     sleep(60)
